@@ -1,0 +1,482 @@
+\label{proofs}
+
+\subsection{Exception is a Monad}
+\label{exception_is_a_monad}
+Dimostriamo che il tipo astratto $Exception$ \ref{exceptions} è un
+\textit{Functor}, \textit{Premonad} e \textit{Monad}\newline
+
+\textbf{Dim:}\newline
+
+Dimostriamo che il tipo astratto con le operazioni di \textit{map},
+\textit{unit} e \textit{join} rispetta le leggi definite per \textit{Functor},
+\textit{Premonad} e \textit{Monad}, $M1\dots7$
+
+\begin{align*}
+  \textbf{data}\ Exception\ a &= Raise\ String\ |\ Return\ a \\\\
+  map &:: (a \to b) \to Exception\ a \to Exception\ b\\
+  map\ f\ (Raise\ s) &= Raise\ s\\
+  map\ f\ (Return\ x) &= Return\ (f\ x)\\\\
+  unit &:: a \to Exception\ a\\
+  unit &= Return\\\\
+  join &:: Exception\ (Exception\ a) \to Exception\ a\\
+  join\ (Raise\ s) &= Raise\ s\\
+  join\ (Return\ x) &= x
+\end{align*}
+
+Per la dimostrazione procedo per casi sui costrutti $Raise$ e $Return$
+
+\begin{framed}
+  \begin{align*}
+      (Raise)\qquad
+      &\quad map\ id\ (Raise\  s) && \{map\}\\
+      =&\quad (Raise\ s) && \{id^{-1}\}\\
+      =&\quad id\ (Raise\ s)\\\\
+      (Return)\qquad
+      &\quad map\ id\ (Return\ x) && \{map\}\\
+      =&\quad Return\ (id\ x) && \{id\}\\
+      =&\quad Return\ x
+    %\caption*{$(M1)$}
+  \end{align*}
+
+  \begin{align*}
+      (Raise)\qquad
+      &\quad (map\ f\ .\ map\ g)\ (Raise\ s) && \{composition\}\\
+      =&\quad map\ f\ (map\ g\ (Raise\ s)) && \{map\}\\
+      =&\quad map\ f\ (Raise\ s) && \{map\}\\
+      =&\quad Raise\ s && \{map^{-1}\}\\
+      =&\quad map\ (f\ .\  g)\ (Raise\ s)\\\\
+      (Return)\qquad
+      &\quad (map\ f\ .\ map\ g)\ (Return\ s) && \{composition\}\\
+      =&\quad map\ f\ (map\ g\ (Return\ s)) && \{map\}\\
+      =&\quad map\ f\ (Return\ (g\ s)) && \{map\}\\
+      =&\quad Return\ (f\ (g\ s)) && \{composition^{-1}\}\\
+      =&\quad Return\ ((f\ .\ g)\ s) && \{map^{-1}\}\\
+      =&\quad map\ (f\ .\  g)\ (Return\ s)
+    %\caption*{$(M2)$}
+  \end{align*}
+
+  \begin{align*}
+      (Raise)\qquad
+      &\quad (unit\ .\ f)\ (Raise\ s) && \{composition\}\\
+      =&\quad unit\ (f\ (Raise\ s)) &&\{unit\}\\
+      =&\quad Return\ (f\ (Raise\ s)) && \{map^{-1}\} \\
+      =&\quad map\ f\ (Return\ (Raise\ s)) && \{unit^{-1}\} \\
+      =&\quad map\ f\ (unit\ (Raise\ s)) && \{composition^{-1}\} \\
+      =&\quad (map\ f\ .\ unit)\ (Raise\ s)\ \\\\
+      (Return)\qquad
+      &\quad (unit\ .\ f)\ (Return\ s) && \{composition\}\\
+      =&\quad unit\ (f\ (Return\ s)) &&\{unit\}\\
+      =&\quad Return\ (f\ (Return\ s)) && \{unit^{-1}\} \\
+      =&\quad Return\ (f\ (unit\ s)) && \{composition^{-1}\} \\
+      =&\quad Return\ ((f\ .\ unit)\ s) && \{map^{-1}\} \\
+      =&\quad (map\ f\ .\ unit)\ (Return\ s)\
+    %\caption*{$(M3)$}
+  \end{align*}
+
+  \begin{align*}
+      (Raise)\qquad
+      &\quad (join\ .\ map\ (map\ f))\ (Raise\ s) && \{composition\}\\
+      =&\quad join\ (map\ (map\ f)\ (Raise\ s)) && \{map\}\\
+      =&\quad join\ (Raise\ s)  && \{join\}\\
+      =&\quad Raise\ s\ && \{map^{-1}\}\\
+      =&\quad map\ f\ (Raise\ s) && \{join^{-1}\}\\
+      =&\quad map\ f\ (join\ (Raise\ s)) && \{composition^{-1}\}\\
+      =&\quad map\ f\ .\ join\ (Raise\ s)\\\\
+      (Return)\qquad
+      &\quad (join\ .\ map\ (map\ f))\ (Return\ s) && \{composition\}\\
+      =&\quad join\ (map\ (map\ f)\ (Return\ s)) && \{map\}\\
+      =&\quad join\ (Return\ (map\ f\ s))  && \{join\}\\
+      =&\quad map\ f\ s && \{join^{-1}\} \quad(*)\\
+      =&\quad map\ f\ (join\ (Return\ s)) && \{composition^{-1}\}\\
+      =&\quad map\ f\ .\ join\ (Return\ s)\
+    %\caption*{$(M4)$}
+  \end{align*}
+  \begin{align*}
+      (Raise)\qquad
+      &\quad (join\ .\ unit)\ (Raise\ s) && \{composition\}\\
+      =&\quad join\ (unit\ (Raise\ s)) && \{unit\}\\
+      =&\quad join\ (Return\ (Raise\ s)) && \{join\}\\
+      =&\quad Raise\ s && \{id^{-1}\}\\
+      =&\quad id\ (Raise\ s) \\\\
+      (Return)\qquad
+      &\quad (join\ .\ unit)\ (Return\ s) && \{composition\}\\
+      =&\quad join\ (unit\ (Return\ s) && \{unit\}\\
+      =&\quad join\ (Return\ (Return\ s) && \{join\}\\
+      =&\quad Return\ s && \{id^{-1}\}\\
+      =&\quad id\ (Return\ s)
+    %\caption*{$(M5)$}
+  \end{align*}
+
+  \begin{align*}
+      (Raise)\qquad
+      &\quad (join\ .\ map\ unit)\ (Raise\ s)) && \{composition\}\\
+      =&\quad join\ (map\ unit\ (Raise\ s)) && \{map\}\\
+      =&\quad join\ (Raise\ s) && \{join\}\\
+      =&\quad Raise\ s\ && \{id^{-1}\}\\
+      =&\quad id\ (Raise\ s) \\\\
+      (Return)\qquad
+      &\quad (join\ .\ map\ unit)\ (Return\ s) && \{composition\}\\
+      =&\quad join\ (map\ unit\ (Return\ s)) && \{map\}\\
+      =&\quad join\ (Return\ (unit\ s)) && \{unit^{-1}\}\\
+      =&\quad join\ (unit\ (unit\ s)) && \{composition^{-1}\}\\
+      =&\quad join\ .\ unit\ (unit\ s) && \{M5\}\\
+      =&\quad id\ (unit\ s) && \{unit\}\\
+      =&\quad id\ (Return\ s)
+    %\caption*{$(M6)$}
+  \end{align*}
+
+  \begin{align*}
+      (Raise)\qquad
+      &\quad (join\ .\ map\ join)\ (Raise\ s)) && \{composition\}\\
+      =&\quad join\ (map\ join\ (Raise\ s)) && \{map\}\\
+      =&\quad join\ (Raise\ s) && \{join^{-1}\}\\
+      =&\quad join\ (join\ (Raise\ s)) && \{composition^{-1}\}\\
+      =&\quad join\ .\ join\ (Raise\ s) \\\\
+      (Return)\qquad
+      &\quad (join\ .\ map\ join)\ (Return\ s) && \{composition\}\\
+      =&\quad join\ (map\ join\ (Return\ s)) && \{map\}\\
+      =&\quad join\ (Return\ (join\ s)) && \{join\}\\
+      =&\quad join\ s && \{join^{-1}\}\quad(*)\\
+      =&\quad join\ (join\ (Return\ s)) && \{composition^{-1}\}\\
+      =&\quad join\ .\ join\ (Return\ s)
+    %\caption*{$(M7)$}
+  \end{align*}
+\end{framed}
+
+Osservazione $(*)$, utilizzando la definizione inversa di $join$ richiedo che il suo
+parametro $s$ sia di tipo $s::Exception$
+
+% ------------------------------------------------------------------------------
+
+\pagebreak
+\subsection{Natural Join doesn't exist}
+\label{natural_join_doesn_t_exist}
+Dimostriamo che non esiste il $join$ naturale tra \textit{Monads} generici
+\ref{conditions_for_composition}.
+In parole, è impossibile costruire la funzione $join$ per la composizione di due
+$Monads$ utilizzando esclusivamente gli operatori dei monadi.\\
+Supponiamo di lavorare con due $Monads$ dati $M$ e $N$.
+Nel caso più generale un termine ben tipato può essere costruito utilizzando
+solo gli operatori $map$, $unit$ e $join$.
+Precisamente possiamo costruire solo termini generati dalla seguenti regole
+\begin{align*}
+  \begin{split}
+    a \overset{id}{\longrightarrow} a
+  \end{split}
+    \begin{split}
+      \frac
+        {b \overset{f}{\longrightarrow} c\quad a \overset{g}{\longrightarrow} b}
+        {a \overset{f\ .\ g}{\longrightarrow} c}
+    \end{split}
+  % \end{split}
+\end{align*}
+\begin{align*}
+  \begin{split}
+    \frac
+      {a \overset{f}{\longrightarrow} a}
+      {M\ a \overset{map_M\ f}{\longrightarrow} M\ b}
+  \end{split}
+  \begin{split}
+    \frac
+      {a \overset{f}{\longrightarrow} a}
+      {N\ a \overset{map_N\ f}{\longrightarrow} N\ b}
+  \end{split}
+\end{align*}
+\begin{align*}
+  \begin{split}
+    a \overset{unit_M}{\longrightarrow} M\ a
+  \end{split}
+  \begin{split}
+    a \overset{unit_N}{\longrightarrow} N\ a
+  \end{split}
+\end{align*}
+\begin{align*}
+  \begin{split}
+    M\ (M\ a) \overset{join_M}{\longrightarrow} M\ a
+  \end{split}
+  \begin{split}
+    N\ (N\ a) \overset{join_N}{\longrightarrow} N\ a
+  \end{split}
+\end{align*}
+Queste regole comprendono il più piccolo set per poter modellare adeguatamente
+le operazioni in maniera naturale.
+Utilizzando questa caratterizzazione mostrerò che non c'è modo di costruire un
+termine del tipo $M\ (N\ (M\ (N\ a))) \to M\ (N\ a)$ e quindi che non esiste il
+$join$ naturale per la composizione dei \textit{Monads}.\newline
+
+Per convenienza utilizzerò le seguenti convenzioni:
+\begin{itemize}
+  \item scriverò la stringa $MNMNX$ al posto dell'espressione $M\ (N\ (M\ (N\ X)))$
+        ,inoltre per l'i-esimo elemento di una qualsiasi stringa $X$ utilizzerò
+        la notazione $(X)_i$, ad esempio, $(MNMMX)_1 = M$, $(MNMMX)_5 = X$ e $(MNMMX)_6 = \emptyset$
+  \item userò la notazione $rd\ X$ per la stringa ottenuta rimuovendo tutti i
+        duplicati adiacenti da $X$, per esempio, $rd\ MMNMNNX\ =\ MNMNX$
+  \item $\req{X}$ è l'operatore che ritorna $|rd\ X|$, ossia la cardinalità di $rd\ X$
+
+\end{itemize}
+Notiamo quindi che se le regole base definissero solo funzioni del tipo
+\begin{align*}
+  X \to Y \implies
+  \begin{cases}
+   \req{X}\ <\ \req{Y} &if\ (X)_1 \neq (Y)_1\\
+   \req{X}\ \leq\ \req{Y} &if\ (X)_1 = (Y)_1
+  \end{cases}
+  && (*)
+\end{align*}
+
+\begin{align*}
+  \vdash X \to Y \implies
+  \begin{cases}
+   |rd\ X|\ <\ |rd\ Y| &if\ (X)_1 \neq (Y)_1\\
+   |rd\ X|\ \leq\ |rd\ Y| &if\ (X)_1 = (Y)_1
+  \end{cases}
+  && (*)
+\end{align*}
+allora potremmo conseguire che la funzione $join$ non è ottenibile essendo che
+la funzione del tipo $MNMNX \to MNX$ ha come proprietà
+\begin{align*}
+  (MNMNX)_1 = M = (MNX)_1 \land
+  \req{MNMNX}\ >\ \req{MNX}
+\end{align*}
+E quindi non rispetta $(*)$.\newline
+
+\textbf{Dim:}\newline
+
+Procedo per induzione sull'altezza $h$ dell'albero di derivazione generato dalle
+regole definite.\newline
+
+\textbf{Caso base:} $(h = 0)$ nessuna regola mi permette di procedere
+senza eseguire almeno un passo quindi il predicato $X \to_0 Y$ è falso.
+Implica che la proprietà $(*)$ è vacuamente vera.\newline
+
+\textbf{Caso induttivo:} $(h \to h+1)$\\
+La proprietà $(*)$ da dimostrare diventa quindi
+\begin{align*}
+  X \to_{h+1} Y \implies
+  \begin{cases}
+   \req{X}\ <\ \req{Y} &if\ (X)_1 \neq (Y)_1\\
+   \req{X}\ \leq\ \req{Y} &if\ (X)_1 = (Y)_1
+  \end{cases}
+  && (**)
+\end{align*}
+L'ipotesi induttiva invece è così definita
+\begin{align*}
+  X \to_{\leq h} Y \land (X)_1 \neq (Y)_1 \implies \req{X}\ <\ \req{Y} &&(IP1)\\
+  X \to_{\leq h} Y \land (X)_1 = (Y)_1 \implies \req{X}\ \leq\ \req{Y} &&(IP2)
+\end{align*}
+Procedo per casi per ogni regola definita
+\begin{itemize}
+  \item \textbf{[id]}
+    \begin{align*}
+        \frac{\req{X}\ \leq\  \req{X}}{X \overset{id}{\longrightarrow}_{h+1} X}
+    \end{align*}
+      In questo caso è ovvio che $(X)_1 = (X)_1$\\
+      E dato che l'operatore $\leq$ gode della proprietà riflessiva quindi ho
+      dimostrato $(**)$ per l'identità
+  \item \textbf{[composition]}
+    \begin{align*}
+        \frac{
+        \exists Z.
+        \quad \overset{(1)}{Z \overset{f}{\longrightarrow}_{\leq h} Y}
+        \quad \overset{(2)}{X \overset{g}{\longrightarrow}_{\leq h} Z}
+        }{X \overset{f\ .\ g}{\longrightarrow}_{h+1} Y}
+    \end{align*}
+    Procediamo per casi su $(1)$ e $(2)$:
+    \begin{itemize}
+      \item $(Z)_1 = (Y)_1 \land (X)_1 = (Z)_1$, quindi applico l'ipotesi induttiva
+        $(IP2)$ a $(1)$ e $(2)$ e ottengo che $\req{Z}\ \leq\ \req{Y} \land
+        \req{X}\ \leq\ \req{Z}$.\\
+        Dato che l'operatore $\leq$ gode della proprietà
+        riflessiva ho che vale quindi $\req{X}\ \leq\ \req{Y}$.\\
+        Per concludere basta osservare che $(Z)_1 = (Y)_1 \land (X)_1 = (Z)_1
+        \implies (X)_1 = (Y)_1$ e quindi devo provare la proprietà $\req{X}\ \leq\ \req{Y}$
+        in $(**)$.\\
+      \item $(Z)_1 = (Y)_1 \land (X)_1 \neq (Z)_1$, quindi applico l'ipotesi induttiva
+        $(IP2)$ a $(1)$ e $(IP1)$ a $(2)$ e ottengo che $\req{Z}\ \leq\ \req{Y} \land
+        \req{X}\ <\ \req{Z}$.\\
+        Concatenando $(1)$ e $(2)$ ottengo $\req{X}\ <\ \req{Z}\ \leq\ \req{Y}$
+        che implica $\req{X}\ <\ \req{Y}$.\\
+        Per concludere basta osservare che $(Z)_1 = (Y)_1 \land (X)_1 \neq (Z)_1
+        \implies (X)_1 \neq (Y)_1$ e quindi devo provare la proprietà $\req{X}\ <\ \req{Y}$
+        in $(**)$.\\
+      \item $(Z)_1 \neq (Y)_1 \land (X)_1 = (Z)_1$, duale al caso precedente.\\
+      \item $(Z)_1 \neq (Y)_1 \land (X)_1 \neq (Z)_1$, quindi applico l'ipotesi induttiva
+        $(IP1)$ a $(1)$ e $(2)$ e ottengo che $\req{Z}\ <\ \req{Y} \land
+        \req{X}\ <\ \req{Z}$.\\
+        Dato che l'operatore $<$ gode della proprietà
+        riflessiva ho che vale quindi $\req{X}\ <\ \req{Y}$.\\
+        Ho concluso dimostrando $(**)$ dato che senza interessarci a quanto vale
+        l'uguaglianza tra $(X)_1$ e $(Y)_1$ ho comunque già valida l'ipotesi più
+        forte, ovvero $\req{X}\ <\ \req{Y}$.\\
+    \end{itemize}
+    Per tutti i quattro casi vale $(**)$ quindi ho dimostrato $(**)$ per la composizione.
+    \item \textbf{[map]} dimostro per $map_M$ e ottengo anche il duale $map_N$
+      \begin{align*}
+          \frac{
+            \overset{(1)}{X \overset{f}{\longrightarrow}_{\leq h} Y}
+          }{MX \overset{map_M\ f}{\longrightarrow}_{h+1} MY}
+      \end{align*}
+      Ora notiamo che vale $(MX)_1 = M = (MY)_1$ quindi la proprietà da dimostrare
+      in tutti i casi è la meno restrittiva, ossia $\req{MX} \leq\ \req{MY}$.\\
+      Procedo per casi su $(1)$:
+      \begin{itemize}
+        \item $(X)_1 = (Y)_1$, quindi applico l'ipotesi induttiva $(IP2)$ e
+          ottengo $\req{X}\ \leq\ \req{Y}$.\\
+          Ora mi trovo davanti a due sottocasi:
+          \begin{itemize}
+            \item $(X)_1 = M (\implies (Y)_1 = M)$, allora ho che
+              \begin{align*}
+              \req{MX} = \req{MMX'} = \req{MX'} = \req{X}\\
+              \req{MY} = \req{MMY'} = \req{MY'} = \req{Y}
+              \end{align*}
+              quindi data l'ipotesi induttiva ottengo che
+            \begin{equation*}\req{MX} = \req{X} \leq_{ip. ind}\ \req{Y} = \req{MY}\end{equation*}
+            \item $(X)_1 = N (\implies (Y)_1 = N)$, allora ho che
+              \begin{align*}
+              \req{MX} = \req{MNX'} \overset{(a)}{=} 1 + \req{NX'} = 1 + \req{X}\\
+              \req{MY} = \req{MNY'} \overset{(a)}{=} 1 + \req{NY'} = 1 + \req{Y}
+              \end{align*}
+              quindi data l'ipotesi induttiva ottengo che
+            \begin{equation*}\req{MX} = 1 + \req{X} \leq_{ip. ind}\ 1 + \req{Y} = \req{MY}\end{equation*}
+              Il passaggio $(a)$ è giustificato dal fatto che $\req{MNX'} = |rd\ MNX'| = 1 + |rd\ NX'|$
+          \end{itemize}
+        \item $(X)_1 \neq (Y)_1$, quindi applico l'ipotesi induttiva $(IP1)$ e
+          ottengo $\req{X}\ <\ \req{Y}$.\\
+          Ora mi trovo davanti a due sottocasi:
+          \begin{itemize}
+            \item $(X)_1 = M (\implies (Y)_1 = N)$, allora ho che
+              \begin{align*}
+              \req{MX} = \req{MMX'} = \req{MX'} = \req{X}\\
+              \req{MY} = \req{MNY'} = 1 + \req{NY'} = 1 + \req{Y}
+              \end{align*}
+              quindi data l'ipotesi induttiva ottengo che
+            \begin{equation*}\req{MX} = \req{X} <_{ip. ind}\ \req{Y} <\ 1 + \req{Y} = \req{MY}\end{equation*}
+            \item $(X)_1 = N (\implies (Y)_1 = M)$, allora ho che
+              \begin{align*}
+              \req{MX} = \req{MNX'} = 1 + \req{NX'} = 1 + \req{X}\\
+              \req{MY} = \req{MMY'} = \req{MY'} = \req{Y}
+              \end{align*}
+              quindi data l'ipotesi induttiva ottengo che
+            \begin{align*}
+              &\quad\req{MX} = 1 + \req{X} <_{ip. ind}\ 1 + \req{Y}\\
+              &\implies 1 + \req{X} \leq\ \req{Y} = \req{MY}
+            \end{align*}
+          \end{itemize}
+          Concludo quindi di aver dimostrato $(**)$ per l'operatore $map$.
+      \end{itemize}
+      \item \textbf{[unit]} dimostro per $unit_M$ e ottengo anche il duale $unit_N$
+        \begin{equation*}X \overset{unit_M}{\longrightarrow_{h+1}} MX\end{equation*}
+        Mi trovo davanti a due casi:
+        \begin{itemize}
+          \item $(X)_1 = M \implies \req{MX} = \req{MMX'} = \req{MX'} = \req{X}$\\
+            Per riflessività di $\leq$ ottengo
+            \begin{equation*}\req{X} = \req{MX} \leq\ \req{MX}\end{equation*}
+            Inoltre essendo che $(X)_1 = M = (MX)_1$ allora ho dimostrato $(**)$
+            per questo caso.
+          \item  $(X)_1 = N \implies \req{MX} = \req{MNX'} = 1 + \req{NX'} = 1 + \req{X}$\\
+            Quindi ottengo
+            \begin{equation*}\req{X} <\ 1 + \req{X} = \req{MX}\end{equation*}
+            Inoltre essendo che $(X)_1 = N \neq M = (MX)_1$ allora ho dimostrato $(**)$
+            per questo caso.
+        \end{itemize}
+        Concludo quindi di aver dimostrato $(**)$ per l'operatore $unit$.
+      \item \textbf{[join]} dimostro per $join_M$ e ottengo anche il duale $join_N$
+        \begin{equation*}MMX \overset{join_M}{\longrightarrow_{h+1}} MX\end{equation*}
+        Per l'operatore di $join$ concludo direttamente osservando le due proprietà
+        \begin{align*}
+          (MMX)_1 = M = (MX)_1\\
+          \req{MMX} = \req{MX} \leq\ \req{MX}
+        \end{align*}
+        Quindi concludo anche per quest'ultimo caso che la proprietà $(**)$ è valida
+        per l'operatore di $join$.
+\end{itemize}
+
+Questa dimostrazione prova quindi che, con la grammatica sopra definita,
+la funzione $join$ non è ottenibile essendo funzioni del tipo $MNMNX \to MNX$
+hanno come proprietà
+\begin{align*}
+  (MNMNX)_1 = M = (MNX)_1 \land
+  \req{MNMNX}\ >\ \req{MNX}
+\end{align*}
+Non ottenibili in questo contesto dato che non soddisfano $(*)$.\newline
+
+
+\textbf{Conseguenze:} come conseguenze possiamo notare che gli operatori $map$ e
+$unit$ possono essere generati in quanto rispettano $(**)$
+\begin{align*}
+  (MNX)_1 = M = (MNX)_1\  \land\  &\req{MNX} \leq \req{MNX} &&(map_M\ .\ map_N\ f)\\
+  &\req{X} < \req{MNX} &&(unit_M\ .\ unit_N)
+\end{align*}
+Mentre nessuno tra $prod$, $dorp$ e $swap$ può essere costruito.
+% ------------------------------------------------------------------------------
+
+\pagebreak
+\subsection{Monad Comprehensions Equivalence}
+\label{monad_comprehensions_equivalence}
+Dimostriamo la seguente proprietà, mostrata nella sezione \ref{monad_comprehensions}
+\begin{align*}
+    &{[\ v_0 + v_1\ |\ v_0 \leftarrow eval\ e_0\ env,\ v_1 \leftarrow eval\ e_1\ env\ ]} = \\
+    &bind\ (eval\ e_0\ env) (\lambda\ v_0 \to bind\ (eval\ e_1\ env) (\lambda\ v_1 \to unit (v_0 + v_1)))
+\end{align*}
+
+Per semplicità utilizzerò le seguenti definizioni durante la dimostrazione,
+essendo equazioni non modifico la semantica della proprietà da dimostrare
+
+\begin{align*}
+    E_i = eval\  e_i\  env \qquad \forall i \in {[0,\ 1]}
+\end{align*}
+La proprietà da dimostrare diventa
+\begin{align*}
+    &{[\ v_0 + v_1\ |\ v_0 \leftarrow E_0,\ v_1 \leftarrow E_1\ ]} = \\
+    &bind\ E_0\ (\lambda\ v_0 \to bind\ E_1\ (\lambda\ v_1 \to unit\ (v_0 + v_1)))
+\end{align*}
+
+\textbf{Dim:}\newline
+
+Prima di cominciare bisogna definire una regola che segue direttamente da
+un'osservazione delle regole $(M5)$ e $(M6)$
+\begin{align*}
+    map\ (f\ .\ unit)\ &=\ map\ f\ .\ unit \qquad&& (Sub)
+  \end{align*}
+Questa proprietà si prova facilmente con la seguente dimostrazione
+\begin{framed}
+\begin{align*}
+    &\quad map\ (f\ .\ unit)\ && \{M2\}\\
+    =&\quad map\ f\ .\ map\ unit &&\{(*)\}\\
+    =&\quad map\ f\ .\ unit
+\end{align*}
+
+\begin{align*}
+    (*)\ join\ .\ unit\ \stackrel{(M5)}{=} id \stackrel{(M6^{-1})}{=} join\ .\ map\ unit\\
+    \Rightarrow unit\ =\ map\ .\ unit
+\end{align*}
+
+
+Ora invece possiamo procedere alla dimostrazione principale
+\begin{align*}
+    &\quad{[\ v_0 + v_1\ |\ v_0 \leftarrow E_0,\ v_1 \leftarrow E_1\ ]} && \{joinComp\}\\
+    =&\quad join\ {[\ {[\ v_0 + v_1\ |\ v_1 \leftarrow E_1\ ]}\ |\ v_0 \leftarrow E_0 \ ]} && \{mapComp\}\\
+    =&\quad join\ {[\ map\ (v_0+)\ E_1\ |\ v_0 \leftarrow E_0 \ ]} && \{mapComp\}\\
+    =&\quad join\ (map\ (\lambda\ v_0 \to\\
+     &\quad \qquad map\ (v_0+)\ E_1)\ E_0 ) && \{id\}\\
+    =&\quad join\ (map\ (\lambda\ v_0 \to\\
+     &\quad \qquad (map\ (v_0+)\ .\ id)\ E_1)\ E_0 ) && \{M5^{-1}\}\\
+    =&\quad join\ (map\ (\lambda\ v_0 \to\\
+     &\quad \qquad (map\ (v_0+)\ .\ join\ .\ unit)\ E_1)\ E_0 ) && \{M4^{-1}\}\\
+    =&\quad join\ (map\ (\lambda\ v_0 \to\\
+     &\quad \qquad (join\ .\ map\ (map\ (v_0+))\ .\ unit)\ E_1)\ E_0 ) && \{Sub\}\\
+    =&\quad join\ (map\ (\lambda\ v_0 \to\\
+     &\quad \qquad (join\ .\ map\ (map\ (v_0+)\ .\ unit))\ E_1)\ E_0 ) && \{M4^{-1}\}\\
+    =&\quad join\ (map\ (\lambda\ v_0 \to\\
+     &\quad \qquad (join\ .\ map\ (unit\ .\ (v_0+)))\ E_1)\ E_0 ) && \{composition\}\\
+    =&\quad join\ (map\ (\lambda\ v_0 \to\\
+     &\quad \qquad join\ (map\ (unit\ .\ (v_0+))\ E_1))\ E_0 ) && \{bind^{-1}\}\\
+    =&\quad join\ (map\ (\lambda\ v_0 \to\\
+     &\quad \qquad bind\ E_1\ (unit\ .\ (v_0+)))\ E_0 ) && \{bind^{-1}\}\\
+    =&\quad bind\ E_0\ (\lambda\ v_0 \to bind\ E_1\ (unit\ .\ (v_0+))) && \{composition\}\\
+    =&\quad bind\ E_0\ (\lambda\ v_0 \to bind\ E_1\ (\lambda\ v_1 \to unit\ (v_0+v_1))) && \{E_0\ e\ E_1\}\\
+    =&\quad bind\ (eval\ e_0\ env) \lambda\ v_0 \to \\
+     &\quad \qquad \qquad bind\ (eval\ e_1\ env) \lambda\ v_1 \to \\
+     &\quad \qquad \qquad \qquad unit\ (v_0+v_1)
+  \end{align*}
+\end{framed}

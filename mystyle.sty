@@ -1,0 +1,147 @@
+
+% put packages here
+\usepackage[italian]{babel} % lettere accentate
+\usepackage[T1]{fontenc} % lettere accentate
+\usepackage[utf8]{inputenc} % lettere accentate
+\usepackage{amsmath, amsthm} % abs syntax
+\usepackage{mathtools}
+\usepackage{calc,booktabs,xparse,environ} % abs syntax
+\usepackage{hyperref} % clickable link
+\usepackage{blindtext} % lorem ipsum
+\usepackage{graphicx}
+\usepackage{array} % table in italic
+\usepackage{listings} % code listing
+\usepackage{caption,xparse} % centering code
+\usepackage{float} % block figure
+\usepackage{framed}
+\usepackage{bm}
+
+% first page entries -----------------------------------------------------------
+\title{
+Reasoning about Composing Monads
+}
+\date{2019\\ February}
+\author{Denis Mazzucato\\Master in Computer Science\\University of Padova}
+
+% Abstract Syntax --------------------------------------------------------------
+
+% syntax symbols
+\newcommand{\STO}{&\to}
+\newcommand{\SOR}{&\mathrel{\makebox[\widthof{$\to$}]{$|$}}%
+}
+\newcommand{\sor}{\mathrel{\makebox[\widthof{$\to$}]{$|$}}%
+}
+\newcommand{\REM}[1]{&&\text{#1}}
+
+% Haskell symbols
+\newcommand{\mv}[1]{\mathit{#1}}% metavariable
+\newcommand{\hTO}{\mathrel{\texttt{=>}}}
+\newcommand{\hto}{\mathrel{\texttt{->}}}
+\newcommand{\hlp}{\mathopen{\texttt{(}}}
+\newcommand{\hrp}{\mathopen{\texttt{)}}}
+\newcommand{\hlb}{\mathopen{\texttt{[}}}
+\newcommand{\hrb}{\mathopen{\texttt{]}}}
+\newcommand{\hlc}{\mathpunct{\texttt{,}}}
+
+
+\ExplSyntaxOn
+\NewEnviron{haskellsyntax}
+ {
+  \tl_replace_all:Nnn \BODY { \par } { }
+  $\begin{aligned}
+  \haskell_syntax:V \BODY
+  \end{aligned}$
+ }
+\cs_new_protected:Nn
+\haskell_syntax:n
+ {
+  \seq_clear:N \l_haskell_syntax_output_seq
+  \seq_set_split:Nnn \l_haskell_syntax_body_seq { \\ } { #1 }
+  \seq_map_inline:Nn \l_haskell_syntax_body_seq
+   {
+    \seq_set_split:Nnn \l_haskell_syntax_row_seq { \SOR } { ##1 }
+    \seq_put_right:Nx \l_haskell_syntax_output_seq
+     {
+      \seq_use:Nn \l_haskell_syntax_row_seq { \haskell_syntax_break: }
+      \exp_not:N \\
+     }
+   }
+  \seq_use:Nn \l_haskell_syntax_output_seq { \addlinespace }
+ }
+\cs_generate_variant:Nn \haskell_syntax:n { V }
+\cs_new_protected:Nn \haskell_syntax_break: { \\ \SOR }
+\ExplSyntaxOff
+
+% Code listing -----------------------------------------------------------------
+\lstset{
+  frame=none,
+  stepnumber=1,
+  numbers=none,
+  belowcaptionskip=\bigskipamount,
+  captionpos=b,
+  escapeinside={*'}{'*},
+  language=haskell,
+  tabsize=2,
+  emphstyle={\bf},
+  commentstyle=\it,
+  stringstyle=\mdseries\rmfamily,
+  showspaces=false,
+  keywordstyle=\bfseries\rmfamily,
+  basicstyle=\small\sffamily,
+  showstringspaces=false,
+  morecomment=[l]\%,
+  mathescape=true,
+}
+
+\newenvironment{CenteredBox}{%
+\begin{Sbox}}{% Save the content in a box
+\end{Sbox}\centerline{\parbox{\wd\@Sbox}{\TheSbox}}}% And output it centered
+
+% Centering code ---------------------------------------------------------------
+
+\ExplSyntaxOn
+\tl_new:N \l_listings_boxed_options_tl
+\keys_define:nn { listings/boxed }
+ {
+  caption .tl_set:N = \l_listings_boxed_caption_tl,
+  shortcaption .tl_set:N = \l_listings_boxed_shortcaption_tl,
+  label .tl_set:N = \l_listings_boxed_label_tl,
+  unknown .code:n =
+          \tl_put_right:NV \l_listings_boxed_options_tl \l_keys_key_tl
+          \tl_put_right:Nn \l_listings_boxed_options_tl { = #1 , },
+ }
+\box_new:N \l_listings_boxed_box
+
+\lstnewenvironment{blstlisting}[1][]
+ {
+  \keys_set:nn { listings/boxed } { #1 }
+  \exp_args:NV \lstset \l_listings_boxed_options_tl
+  \hbox_set:Nw \l_listings_boxed_box
+ }
+ {
+  \hbox_set_end:
+  \cs_set_eq:cc {c@figure} {c@lstlisting}
+  \tl_set_eq:NN \figurename \lstlistingname
+  \tl_if_empty:NF \l_listings_boxed_caption_tl
+   {
+    \tl_if_empty:NTF \l_listings_boxed_shortcaption_tl
+     {
+      \captionof{figure}{\l_listings_boxed_caption_tl}
+     }
+     {
+      \captionof{figure}[\l_listings_boxed_shortcaption_tl]{\l_listings_boxed_caption_tl}
+     }
+    \tl_if_empty:NF \l_listings_boxed_label_tl { \label{\l_listings_boxed_label_tl} }
+   }
+  \leavevmode\box_use:N \l_listings_boxed_box
+ }
+\ExplSyntaxOff
+
+%-------------------------------------------------------------------------------
+
+\newcommand\doubleplus{+\kern-1.3ex+\kern0.8ex}
+\newcommand\sx{\sqsubseteq_{c}}
+\newcommand{\law}[1]{&&\qquad(#1)}
+\newcommand{\req}[1]{{\parallel#1\parallel}}
+\newcommand*{\genbf}[1]{\ifmmode\mathbf{#1}\else\textbf{#1}\fi}
+\newcommand{\classdef}[1]{\noalign{\centering${#1}$}}

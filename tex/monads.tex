@@ -1,0 +1,58 @@
+\section{Monads}
+\label{monads}
+
+Walder\cite{walder0} definisce un \textit{Monad} come un tipo costrutture unario
+\textit{M}, con un unico parametro, insieme alle tre funzioni \textit{map},
+\textit{unit} e \textit{join} definite dal tipo
+
+\begin{align*}
+  map  &:: (a \to b) \to (M \ a \to M \ b) \\
+  unit &:: a \to M \ a\\
+  join &:: M\ (M \ a) \to M \ a
+\end{align*}
+
+Altre caratterizzazioni (equivalenti) possono essere definite per il concetto
+dei \textit{Monads}, per esempio come definito in Walder\cite{walder1}
+
+\begin{align*}
+  bind :: M \ a \to (a \to M \ b) \to M \ b
+\end{align*}
+
+Ragionando su questa forma è semplice notare come sia del tutto equivalente alle
+precedenti mediante le relazioni
+\begin{align*}
+  bind \ x \ f &= join \ (map \ f \ x)\\
+  join\ x &= bind\ x\ id
+\end{align*}
+
+In ogni caso, per questo report, ho scelto di lavorare con \textit{map},
+\textit{unit} e \textit{join} perchè rendono più marcata la differenza tra
+\textit{Monads} e \textit{Premonads} e inoltre rendono più
+semplice lo svolgimento delle dimostrazioni in questo framework.\newline
+
+In aggiunta a queste funzioni si richiede di soddisfare una collezione di
+proprietà algebriche
+
+\begin{align*}
+    map \ id &= id \law{M1} \\
+    map \ f \ .\ map \ g &= map\ (f\ .\ g) \law{M2}\\
+    unit\ .\ f &= map\ f\ .\ unit \law{M3}\\
+    join\ .\ map\ (map\ f) &= map\ f\ .\ join \law{M4}\\
+    join\ .\ unit &= id \law{M5}\\
+    join\ .\ map\ unit &= id \law{M6}\\
+    join\ .\ map\ join &= join\ .\ join \law{M7}
+\end{align*}
+
+Per lo scopo del report è conveniente definire per parti un \textit{Monad};
+se \textit{M} è un tipo costruttore unario diremo che
+\begin{enumerate}
+  \item \textit{M} è un \textit{Functor} se c'è una funzione
+    $map  :: (a \to b) \to (M \ a \to M \ b) $ che soddisfa le leggi
+    \textit{(M1)} e \textit{(M2)}.
+  \item \textit{M} è un \textit{Premonad} se c'è una funzione
+    $unit :: a \to M\ a$ che soddisfa la legge \textit{(M3)}.
+  \item \textit{M} è un \textit{Monad} se c'è una funzione
+    $join :: M (M\ a) \to M\ a$ che soddisfa le leggi \textit{(M4)},
+    \textit{(M5)}, \textit{(M6)} e \textit{(M7)}.
+
+\end{enumerate}

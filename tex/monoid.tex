@@ -1,0 +1,35 @@
+\label{monoid}
+
+Un \textit{Monoid} è un tipo di dato astratto definito dalla seguente
+dichiarazione di classe
+
+\begin{figure}[H]
+  \centering
+  \footnotesize % adapt to your page size
+  \begin{align*}
+  \noalign{\textbf{class}\ Monoid\ s\  \textbf{where}}
+  zero &:: s\\
+  add &:: s \to s \to s
+  \end{align*}%
+\end{figure}
+
+Dato che nel contesto di questo report un \textit{Monoid} può essere utilizzato
+esclusivamente per operare sui \textit{Monads} richiedo che $add$ sia
+associativa a destra e sinistra con $zero$.
+Possibili \textit{Monoid} sono le liste, le funzioni e i numeri interi
+
+\begin{figure}[H]
+  \centering
+  \footnotesize % adapt to your page size
+  \begin{align*}
+  \noalign{\textbf{instance}\ Monoid\ [a]\  \textbf{where}}
+  zero &=\ [\ ]\\
+  add &=\  (\doubleplus)\\\\
+  \noalign{\textbf{instance}\ Monoid\ (a $\to$ a)\  \textbf{where}}
+  zero &=\  id\\
+  add &=\  ( . )\\\\
+  \noalign{\textbf{instance}\ Monoid\ Int\  \textbf{where}}
+  zero &=\  0\\
+  add &=\ (+)
+  \end{align*}%
+\end{figure}

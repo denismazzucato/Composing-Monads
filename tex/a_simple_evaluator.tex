@@ -1,0 +1,116 @@
+\section{A Simple Evaluator}
+\label{a_simple_evaluator}
+
+\subsection{Abstract Syntax} %--------------------------------------------------
+\label{abstract_syntax}
+
+La funzione di valutazione riceverà in input espressioni generate dalla seguente
+grammatica:
+
+\begin{figure}[h]
+  \centering
+  \footnotesize % adapt to your page size
+  \begin{haskellsyntax}
+  \mv{Expr} \STO \mv{Const} \ \mv{Value}
+                  \REM{Valore costante}
+            \SOR \mv{Var} \ \mv{Name}
+                  \REM{Variabile in memoria}
+            \SOR \mv{Expr} + \mv{Expr}
+                  \REM{Addizione tra espressioni}
+            \SOR \mv{Trace} \ \mv{String} \ \mv{Expr}
+                  \REM{Struttura di log}
+  \\
+  \mv{Env} \STO [(\mv{Name}, \mv{Value})]
+                \REM{Ambiente di mapping delle variabili}
+  \\
+  \mv{Name} \STO \mv{String}
+  \\
+  \mv{Value} \STO \mv{Int}
+  \end{haskellsyntax}%
+
+\end{figure}
+
+Per mantere l'esempio semplice ho ridotto al minimo le espressioni generabili
+nel linguaggio, permettendo solamente costanti, variabili, addizioni ed un
+semplice meccanismo di log.\newline
+
+Si noti come questa grammatica permetta comunque l'implementazione di alcune
+caratteristiche basilari come: la gestione degli errori per variabili
+sconosciute, un sistema di output e la gestione dell'accesso delle variabili nel
+sistema.
+
+\subsection{Implementation} %---------------------------------------------------
+\label{implementation}
+
+Per la prima implementazione della funzione di valutazione utilizzo i seguenti
+tipi astratti:
+
+\begin{figure}[h]
+  \centering
+  \footnotesize % adapt to your page size
+  \begin{haskellsyntax}
+  \textbf{data} \ Error \ a &= Error \ String \sor Ok \ a
+  \\
+  \textbf{data} \ Writer \ s \ a &= (s, a)
+    \REM{con s $::$ \textit{Monoid}, vedi \ref{monoid}}
+
+  \end{haskellsyntax}%
+
+\end{figure}
+
+Con questi due tipi riusciamo a codificare la gestione degli errori e la
+gestione del log, per la codifica dell'\textit{Enviroments} definiamo
+semplicemente la funzione di valutazione, che riceverà in input lo stato
+iniziale e ritornerà un valore (se nessun errore è occorso) e un output,
+possibilmente vuoto.
+
+\begin{align*}
+  eval :: Expr \to Env \to Writer \ [String] \ (Error \ Value)
+\end{align*}
+
+Già dal tipo della funzione \textit{eval} si può notare come sia poco pulito,
+difatti il tipo di ritorno è molto complesso dato che deve gestire ben due
+caratteristiche non banali, la gestione dell'output e degli errori.
+Ora passiamo all'implementazione dell'interprete.
+
+\begin{figure}[H]
+  \centering
+  \footnotesize % adapt to your page size
+  \begin{haskellsyntax}
+  eval \ (Const \ v) \ env &= ([\ ], \ Ok \ a)\\
+  eval \ (Var \ x) \ env   &= ([\ ], \ lookup \ env \ x)\\
+  eval \ (e_0 + e_1) \ env  &= \textbf{case} \ eval \ e_0 \ env \ \textbf{of}\\
+                            {}& \qquad (out_0, \ Error \ s) \to ([\ ], \ Error \ s)\\
+                            {}& \qquad (out_0, \ Ok \ v_0) \quad \to \textbf{case} \ eval \ e_1 \ env \ \textbf{of}\\
+                            {}& \qquad \qquad (out_1, \ Error \ s) \to ([\ ], \ Error \ s)\\
+                            {}& \qquad \qquad (out_1, \ Ok \ v_1) \quad \to (out_0 \doubleplus out_1, v_0 \textbf{+} v_1)\\
+  eval \ (Trace \ s \ e) \ env  &= ([s], \ eval \ e \ env)
+  \end{haskellsyntax}%
+\end{figure}
+
+Prima di procedere notiamo l'utilizzo della funzione \textit{lookup} definita come segue.
+
+\begin{figure}[H]
+  \centering
+  \footnotesize % adapt to your page size
+  \begin{haskellsyntax}
+  lookup &:: Env \to Name \to Error\ Value \\
+  lookup \ [\ ] \ x &= Error \ "Value \ unbounded"\\
+  lookup \ [(name, \ value):xs] \ x &= \textbf{if} \ name = x \
+                                          \textbf{then} \ Ok \ value \
+                                          \textbf{else} \ lookup \ xs \ x
+  \end{haskellsyntax}%
+\end{figure}
+
+Come possiamo notare questo interprete è complicato e necessita di esplicitare
+tutti i passi computazionali esponendolo ad errori.
+Il codice risulta meno mantenibile e ancora meno estensibile, un qualsiasi
+cambiamento, o richiesta di nuova \textit{feature}, richiederebbe la modifica
+di quasi la totalità delle righe di codice.
+In un linguaggio imperativo banale l'implementazione di queste caratteristiche
+è un task molto semplice e non richiede particolari competenze, i
+\textit{Monads} serviranno proprio per portare questa facilità d'esecuzione
+dentro ad un linguaggio funzionale puro.
+
+
+\newpage

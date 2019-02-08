@@ -1,0 +1,108 @@
+\pagebreak
+\section{General Framework for composition}
+\label{general_framework_for_composition}
+
+In questa sezione verranno definite una serie di classi per la generazione di
+un framework per la composizione di monadi.
+Dal precedente capitolo \ref{composing_monads}, definiremo una serie di classi e
+funzioni per poter tipare correttamente le operazioni necessarie e definire
+finalmente il tipo di dato astratto per la composizione generalizzata.
+Le classi saranno implementate in sintassi Gofer per permettere di essere
+codificate in un qualsiasi linguaggio funzionale.\newline
+
+Abbiamo già visto come non sia possibile definire la composizione che riceva
+due $Monads$ arbitrari.
+La prossima migliore opzione è di fissare uno dei due componenti (della
+composizione) e permettere all'altro componente di variare dentro ad una
+famiglia di differenti Monads.
+Come questo accada sarà mostrato con qualche esempio nella sezione
+\ref{some_examples}, prima definiamo il framework.\newline
+
+\subsection{Representing Functors, Premonads and Monads}
+Vediamo velocemente come si rappresentano i tipi costruttori base.
+\begin{align*}
+  \classdef{\bm{class}\ Functor\ f\ \bm{where}}
+  map &:: (a \to b) \to (f\ a \to f\ b)\\\\
+  \classdef{\bm{class}\ Functor\ m \Rightarrow Premonad\ m\ \bm{where}}
+  unit &:: a \to m\ a\\\\
+  \classdef{\bm{class}\ Premonad\ m \Rightarrow Monad\ m\ \bm{where}}
+  join &:: m\ (m\ a) \to m\ a
+\end{align*}
+Con $\implies$ si intende la relazione di $subtyping$, ovvero la classe a sinistra
+di $\implies$ è sotto classe di quella definita a sinistra.
+
+\subsection{Composition Construction}
+\label{composition_construction}
+
+Per descrivere la composizione di $Functors$ e $Premonads$ utilizziamo le
+definizioni
+\begin{align*}
+  mapC &:: (Functor\ f,\ Functor\ g) \implies (a \to b) \to
+  (f \ (g \ a) \to f\ (g\ b))\\
+  mapC &= map\ .\ map\\
+  unitC &= (Premonad\ f,\ Premonad\ g) \implies a \to f\ (g\ a)\\
+  unitC &= unit\ .\ unit
+\end{align*}
+Queste due firme sono del tipo corretto per essere utilizzate come definizione
+di funtore e premonade.
+Tuttiavia, non possono essere utilizzate direttamente come istanze di funtore (e
+premonade) dato che non c'è modo di definire una classe $(f\ .\ g)$ istanza
+di $Functor$ o $Premonad$ o $Monad$.
+Precisamente, non c'è nulla nel tipo dell'espressione $f\ (g\ x)$ che indichi
+a quale costruzione è destinato.
+Per evitare questa ambiguità, definiamo un costruttore $c$ per ogni
+\textit{composition constructions} con l'intenzione che $c\ f\ g\ x$ sia la
+composizione $f\ (g\ a)$, identificando quindi la costruzione utilizzata.
+\begin{align*}
+  \classdef{\bm{class}\ Composer\ c\ \bm{where}}
+  open &:: c\ f\ g\ x \to f\ (g\ x)\\
+  close &:: f\ (g\ x) \to c\ f\ g\ x
+\end{align*}
+Ora proceidamo a definire le istanze di $Functor$ e $Premonad$ per i tipi compositi
+, nota che queste definizioni sono \textit{general purpose}, quindi non necessitano di essere
+ridefinite ogni volta.
+\begin{align*}
+  \classdef{\bm{instance}\ (Composer\ c\,\ Functor\ f,\ Functor\ g) \implies Functor\ (c\ f\ g)\  \bm{where}}
+  map\ f &= close\ .\ mapC\ f\ .\ open\\
+  \classdef{\bm{instance}\ (Composer\ c\,\ Premonad m,\ Premonad n) \implies Premonad\ (c\ m\ n)\  \bm{where}}
+  unit &= close\ .\ unitC
+\end{align*}
+Le prossime definizioni saranno utilizzate molteplici volte nelle sezioni
+seguenti.
+Il loro scopo è di convertire funzioni per il $join$ di composizioni nella forma
+equivalente usando un'istanza $c$ della classe $Composer$.
+\begin{align*}
+  wrap &:: (Composer\ c, Functor\ m, Functor\ n) \implies\\
+       &\quad (m\ (n\ (m\ (n\ a))) \to m\ (n\ a)) \to\\
+       &\qquad (c\ m\ n\ (c\ m\ n\ a) \to c\ m\ n\ a)\\
+  wrap\ j &= close\ .\ j\ .\ mapC\ open\ .\ open
+\end{align*}
+In special modo le prossime due funzioni servono a fornire un modo per racchiudere
+la computazione di un componente dentro il \textit{composite monad}.
+\label{left_and_right}
+\begin{align*}
+  right &:: (Composer\ c,\ Premonad\ f) \implies g\ a \to c\ f\ g\ a\\
+  right &= close\ .\ unit\\\\
+  left &:: (Composer\ c,\ Functor\ f,\ Premonad\ g) \implies f\ a \to c\ f\ g\ a\\
+  left &= close\ .\ map\ unit
+\end{align*}
+
+\subsection{Programming Prod Construction}
+\label{programming_prod_construction}
+
+\subsection{Programming Dorp Construction}
+\label{programming_dorp_construction}
+
+\subsection{Programming Swap Construction}
+\label{programming_swap_construction}
+
+\subsection{Some Examples}
+\label{some_examples}
+
+\subsubsection*{Reader}
+
+\subsubsection*{Writer}
+
+\subsubsection*{Error}
+
+\pagebreak

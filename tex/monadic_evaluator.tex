@@ -1,0 +1,221 @@
+\section{Monadic Evaluator}
+\label{monadic_evaluator}
+
+Ora che sappiamo cosa siano i \textit{Monads} possiamo applicari al primo
+esempio nella sezione \ref{a_simple_evaluator}, in questa sezione costruiremo un
+valutatore monadico per rappresentare le caratteristiche volute.
+Senza entrare troppo nel dettaglio divido l'esempio in due parti per semplicità,
+nelle prossime sezione vedremo come combinare il tutto in maniera semplice ed
+elegante con un sistema generalizzabile.
+
+\subsection{Exceptions}
+\label{exceptions}
+Per rappresentare la gestione delle eccezioni definisco il \textit{Monad}
+
+\begin{figure}[H]
+  \centering
+  \footnotesize % adapt to your page size
+  \begin{haskellsyntax}
+  \textbf{data}\ Exception\ a &= Raise\ String\ |\ Return\ a \\\\
+
+  map &:: (a \to b) \to Exception\ a \to Exception\ b\\
+  map\ f\ (Raise\ s) &= Raise\ s\\
+  map\ f\ (Return\ x) &= Return\ (f\ x)\\\\
+
+  unit &:: a \to Exception\ a\\
+  unit &= Return\\\\
+
+  join &:: Exception\ (Exception\ a) \to Exception\ a\\
+  join\ (Raise\ s) &= Raise\ s\\
+  join\ (Return\ x) &= x
+  \end{haskellsyntax}%
+\end{figure}
+La dimostrazione la si può trovare in appendice \ref{exception_is_a_monad}.
+Definiamo quindi il corrispondente interprete per la grammatica
+\ref{abstract_syntax}
+\begin{figure}[H]
+  \centering
+  \footnotesize % adapt to your page size
+  \begin{haskellsyntax}
+  eval &:: Expr \to Env \to Exception\ Value\\
+  eval \ (Const \ v) \ env &= unit\ v\\
+  eval \ (Var \ x) \ env   &= lookup \ env \ x\\
+  eval \ (e_0 + e_1) \ env &= bind\ (eval\ e_0\ env)\\
+                           & \qquad \lambda\ v_0 \to bind\ (eval\ e_1\ env)\\
+                           & \qquad \qquad \lambda\ v_1 \to unit (v_0 + v_1)
+  \end{haskellsyntax}%
+\end{figure}
+Nota se \textit{Exception }è \textit{Monad} posso usare sia join che bind,
+per questo esempio è comodo utilizzare il bind operator.
+Ora passiamo ad osservare i pregi di questo esempio, notiamo subito come il
+codice sia più coinciso e descriva meglio l'intenzione piuttosto che la
+computazione.
+L'utilizzo di \textit{unit} e \textit{bind} semplifica sia l'implementazione che
+il ragionamento sull'interprete rendendolo più resistente a possibili errori di
+programmazione.
+
+\subsection{Output}
+\label{output}
+
+Per l'output definiamo il tipo astratto \textit{Writer} che definisce un
+meccanismo per tenere la traccia del log prodotto (se prodotto), richiedo
+inoltre che il tipo di
+
+\begin{figure}[H]
+  \centering
+  \footnotesize % adapt to your page size
+  \begin{haskellsyntax}
+    \textbf{data}\ Writer\ s\ a &= (s,\ a) \\\\
+
+      map &:: Monoid\ s \Rightarrow (a \to b) \to Writer\ s\ a \to Writer\ s\ b\\
+      map\ f\ (s,\ a) &= (s,\ f\ a)\\\\
+
+      unit &:: Monoid\ s \Rightarrow a \to Writer\ s\ a\\
+      unit\ x&= (zero,\ x)\\\\
+
+      join &:: Monoid\ s \Rightarrow Writer\ s\ (Writer\ s\ a) \to Writer\ s\ a\\
+      join\ (s',\ (s'',\ a)) &= (s' \doubleplus s'',\ a)
+  \end{haskellsyntax}%
+\end{figure}
+
+Definiamo, come per le eccezioni, la funzione per la grammatica
+\ref{abstract_syntax}
+
+\begin{figure}[H]
+  \centering
+  \footnotesize % adapt to your page size
+  \begin{haskellsyntax}
+  eval &:: Expr \to Env \to Writer\ [String]\ Value\\
+  eval \ (Const \ v) \ env &= unit\ v\\
+  eval \ (Var \ x) \ env   &= \textbf{case}\ lookup \ env \ x\ \textbf{of}\\
+                           & \qquad Raise\ s \to unit\ defaultValue\\
+                           & \qquad Ok\ x \to unit\ x\\
+  eval \ (e_0 + e_1) \ env &= bind\ (eval\ e_0\ env)\\
+                           & \qquad \lambda\ v_0 \to bind\ (eval\ e_1\ env)\\
+                           & \qquad \qquad \lambda\ v_1 \to unit (v_0 + v_1)\\
+  eval \ (Trace\ s\ e)\ env  &= ([s],\ eval\ e\ env)
+  \end{haskellsyntax}%
+\end{figure}
+
+Per il caso delle eccezioni \ref{exceptions}, i
+\textit{Monads} portano gli stessi benefici osservati precedentemente.
+Unica nota negativa, in questo caso per l'espressione $Var\ x$ bisogna
+controllare che la variabile sia stata definita, non gestendo le eccezioni non
+abbiamo alcun modo di ritornare un caso di errore quando la variabile non è
+definita.
+
+\pagebreak
+
+\subsection{Observations on Monadic Evaluator}
+\label{observations_on_monadic_evaluator}
+Da questi due esempi notiamo subito qualche osservazione.
+
+\paragraph*{Why Composing Monads}
+\label{why_composing_monads}
+Per questa sezione \ref{monadic_evaluator}
+ho dovuto dividere in due il semplice interprete concreto.
+Questa necessità è dovuta dal fatto che il monade delle eccezioni definisce un
+meccanismo per gestire gli errori, mentre il monade per la traccia dell'output
+gestisce i logs.
+Quindi non abbiamo raggiunto lo scopo finale, i due interpreti non sono, se
+presi singolarmente, equivalenti al primo \ref{a_simple_evaluator}.
+Possono definirsi "equivalenti" solamente se ne prendiamo l'unione degli
+effetti.\newline
+
+Per risolvere questo problema ci troviamo davanti a due strade, la prima
+possibilità consiste nel definire un nuovo \textit{Monad} caratterizzato dal
+tipo
+\begin{align*}
+  \textbf{data}\ M\ s\ a &= Raise\ String\ |\ Return\ (s,\ a)
+\end{align*}
+Questo tipo astratto però è definito ad-hoc e non presenta nessuna
+caratteristica di generalizzazione, implica che la prossima feature da
+aggiungere renderà inutilizzabile il tipo $M$ e necessiterà di un nuovo tipo
+$M'$ specializzato anch'esso sulla nuovo task.\\
+La seconda possibilità suppone l'esistenza di un compositore di \textit{Monads}
+\begin{align*}
+  \textbf{data}\ MonadCompositor\ m_0\ m_1\ a = MC\ m_0\ m_1\ a
+\end{align*}
+Anche $MonadCompositor$ è un \textit{Monad} e passati due monadi come parametri
+ne ritorna la composizione naturale.
+Con questo framework potremmo definire l'interprete sul tipo
+\begin{align*}
+  eval :: Expr \to Env \to MonadCompositor\ Exception\ (Writer\ [String])
+\end{align*}
+Con il vantaggio di dover modificare solamente poca sintassi dell'interprete
+monadico già definito.
+Inoltre se una nuova feature dovesse essere aggiunta lo sforzo per raggiungere
+il task sarebbe minimo utilizzando il tipo
+\begin{align*}
+  MonadCompositor\ Exception\ (MonadCompositor\ FeatureMonad\ (Writer\ [String]))
+  \end{align*}
+Data la sola definizione del $FeatureMonad$ che dovrà solamente occuparsi di
+implementare il proprio \textit{Monad} in un ambiente chiuso.\newline
+
+Se questa supposizione fosse vera avremmo un meccanismo per modularizzare
+questi \textit{Monads} e combinarli a piacimento tra loro.
+Vedremo come questa supposizione non sia corretta in maniera generale nel
+capitolo \ref{composing_monads}, difatti il \textit{Monad Composer} richiede
+alcune assunzioni e requisiti che vedremo più avanti.
+
+\pagebreak
+\paragraph*{Monad Comprehensions}
+\label{monad_comprehensions}
+
+Scrivendo le funzioni di valutazioni ci accorgiamo di come la sintassi sia
+accessibile solamente da chi abbia piena conoscenza del funzionamento delle
+monadi, quindi ad un lettore esterno il codice di $eval$, in chiave monadica,
+risulta comunque complesso.
+Per migliorare la qualità del codice sotto l'aspetto della comprensibilità ci
+basta notare che se $M$ è un \textit{Monad} possiamo definire le sue operazioni
+con la \textit{comprehension notation}
+\footnote{la \textit{comprehension notation} è un espressione $[\ exp\ |\ gs\ ]$
+dove $exp$ è un espressione e $gs$ è chiamato "generatore".}
+semplificando così la definizione di metodi basati su $map$, $unit$ e $join$.\\
+Traduciamo quindi queste operazioni nella forma di
+\textit{comprehension notation}
+
+\begin{align*}
+  {[\ exp\  |\  x \leftarrow e\ ]} &= map\ (\lambda\ x \to exp)\ e &&mapComp\\
+  {[ \  exp \  ]} &= unit \  exp &&unitComp\\
+  {[\ exp\ |\ gs,\ hs\ ]} &= join\ {[\ {[\ exp\ |\ hs]}\ |\ gs\ ]} &&joinComp\\
+\end{align*}
+
+Per convenienza possiamo derivare le regole $(M\ 1\dots7)$ e definirne di nuove
+con questa notazione
+
+\begin{align*}
+  {[\ x\  |\  x \leftarrow xs\ ]} &= xs &&compId\\
+  {[\ f\ x\ |\ x \leftarrow map\ g\ e\ ]} &= {[\ f\ (g\ x)\ |\ x \leftarrow e\ ]} &&compMap\\
+  {[\ f\ x\ |\ x \leftarrow unit\ e\ ]} &= {[\ f\ e\ ]} &&compUnit\\
+  {[\ exp\ |\ x \leftarrow join\ e\ ]} &= {[\ exp\ |\ z \leftarrow e,\ x \leftarrow z\ ]} &&compJoin
+\end{align*}
+
+Queste possono quindi essere usate per definire l'operatore $join$, vedi
+\begin{align*}
+  &\qquad join\ e &&\\
+  &=\quad {[\ x\ |\ x \leftarrow e\ ]} &&\qquad(compId)\\
+  &=\quad {[\ x\ |\ z \leftarrow e,\ x \leftarrow z\ ]} &&\qquad(compJoin)
+\end{align*}
+
+Se applichiamo questa sintassi alla funzione di valutazione otteniamo il
+seguente risultato (solo per il caso in cui ho un'espressione del tipo somma,
+secondo me l'unico caso da migliorare)
+
+\begin{align*}
+  eval\ (e_0 + e_1)\ env &= {[\ v_0 + v_1\ |\
+                            v_0 \leftarrow eval\ e_0\ env,\
+                            v_1 \leftarrow eval\ e_1\ env\ ]}
+\end{align*}
+
+La dimostrazione:
+\begin{align*}
+  &{[\ v_0 + v_1\ |\ v_0 \leftarrow eval\ e_0\ env,\ v_1 \leftarrow eval\ e_1\ env\ ]} = \\
+  &bind\ (eval\ e_0\ env) (\lambda\ v_0 \to bind\ (eval\ e_1\ env) (\lambda\ v_1 \to unit (v_0 + v_1)))
+\end{align*}
+è stata svolta e riportata in appendice \ref{monad_comprehensions_equivalence}.
+Questa nuova versione in stile \textit{Monad comprehension} è valida per
+entrambi i codici, sia per l'output che per le eccezioni.
+
+\vfill % for the footnote
+\pagebreak

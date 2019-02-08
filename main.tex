@@ -1,0 +1,81 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage{mystyle}
+
+\begin{document}
+
+\maketitle
+\vfill
+% Abstract
+\input{./tex/abstract.tex}
+\clearpage
+\tableofcontents
+\clearpage
+
+
+%-------------------------------------------------------------------------------
+
+% \begin{center}
+
+%   \footnotesize
+%   \begin{tabular}{>{\itshape}l>{\itshape}l}
+%     \multicolumn{2}{l}{-- Using a generator function}\\
+%     fib n & fibs (0,1) !! n \\
+%           \begin{align}
+%           where & fibs (a,b) = a : fibs (b,a+b)\\
+%             &  a = 0\\
+%           \end{align}
+%     \end{tabular}
+%   \end{center}
+% \begin{center}
+% \begin{blstlisting}
+%   JoinP  $=$  s
+%   JoinP  ::s
+% \end{blstlisting}
+% \end{center}
+
+% \begin{align*}
+% joinP &{}={} PComposable ...\\
+% joinP &{}:: join ... &{}= another \\
+% \end{align*}
+
+%-------------------------------------------------------------------------------
+
+% Introduction
+\input{./tex/introduction}
+
+% Simple Evaluator
+\input{./tex/a_simple_evaluator}
+
+% Monads
+\input{./tex/monads.tex}
+
+% Monadic Evaluator
+\input{./tex/monadic_evaluator}
+
+% Composing Monads
+\input{./tex/composing_monads}
+
+% General Framework for Composition
+\input{./tex/general_framework_for_composition}
+
+% Composed Monad Interpreter
+\input{./tex/composed_monad_interpreter}
+
+\appendix
+\pagebreak
+\section{Proofs}
+\input{./tex/proofs}
+
+\pagebreak
+\section{State Transformer}
+\input{./tex/state_transformer}
+
+\pagebreak
+\section{Monoid}
+\input{./tex/monoid}
+
+% Bibliography:
+\clearpage
+\input{./tex/bibliography}
+
+\end{document}

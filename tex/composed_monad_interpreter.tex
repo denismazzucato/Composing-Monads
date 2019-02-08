@@ -1,0 +1,54 @@
+\section{Composed Monad Interpreter}
+\label{composed_monad_interpreter}
+
+Ora riprendiamo il semplice interprete definito nella sezione
+\ref{monadic_evaluator}, definiamolo però in termini di monade combinato.
+Ricordando che la funzione di valutazione dovrà gestire l'accesso a variabili
+dentro ad un $enviroments$, potrebbe produrre dell'output e richiede la gestione
+degli errori.
+Tutto questo è coperto dalla seguente definizione di dato astratto:
+\begin{align*}
+  \bm{type}\ M\ a\ =\ Env\ \to Writer\ [String]\ (Error\ a)
+\end{align*}
+Questa definizione può essere espressa nel seguente modo come composizione tra
+monadi
+\begin{align*}
+  \bm{type}\ M\ a\ =\ DComp\ (Env \to)\ (SComp\ (Writer\ [String])\ Error) a
+\end{align*}
+Inoltre notiamo come, utilizzando $Gofer$, questa definizione risulti "brutta"
+da vedere.
+Potremmo ragionevolmente aspettarci di poter definire $M$ il una maniera migliore.
+In un contesto adatto potremmo definire $M$ in maniera del tutto equivalente nel
+seguente modo
+\begin{align*}
+  M\ a\ =\ (Env\ \to)\ .\ Writer\ [String]\ .\ Error\ a
+\end{align*}
+Utilizzando le funzioni \textit{general purpose} $left$ e $right$, vedi sezione
+\ref{left_and_right}, possiamo includere la computazione di ogni componente dentro
+all'intero $Monad M$ composto.
+\begin{align*}
+  inError &:: Error\ a \to M\ a\\
+  inError &= right\ .\ right\\\\
+  inReader &:: (Env \to a) \to M\ a\\
+  inReader &= left\\\\
+  inWriter &:: Writer\ [String]\ a \to M\ a\\
+  inWriter &= right\ .\ left\\\\
+\end{align*}
+Possiamo anche notare da queste definizioni che si espone un concetto di associatività
+all'interno di $M$, ossia l'operatore di composizione associa a destra.
+Quindi le funzioni per accedere alla posizione del proprio monade all'interno di
+$M$ devono percorre l'albero generato dalla composizione fino al proprio nodo.\\
+
+La definizione di $eval$ è definita da
+\begin{align*}
+  eval &:: Expr \to M\ Value\\
+  eval\ (Const\ v) &= [unit\ v]\ (\text{in maniera equivalente}\ [[v]])\\
+  eval\ (Var\ n) &= [x\ |\ r \leftarrow inReader\ (lookup\ n),\ x \leftarrow inError\ r]\\
+  eval\ (e_0 + e_1) &= [x+y\ |\ x \leftarrow eval\ e_0,\ y \leftarrow eval\ e_1]\\
+  eval\ (Trace\ m\ e) &= [x\ |\ x \leftarrow eval\ e,\\
+                      &\qquad\quad () \leftarrow inWriter\ (Result\ [m \doubleplus "=" \doubleplus x] ())]
+\end{align*}
+
+Osserviamo come questa versione sia finalmente la soluzione preferibile.
+Propone un codice elegante e difficilmente si incorre il rischio di commettere
+errori.

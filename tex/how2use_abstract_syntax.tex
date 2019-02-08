@@ -1,0 +1,30 @@
+
+\begin{figure}
+  \centering
+
+  \footnotesize % adapt to your page size
+  \fbox{%
+    \begin{haskellsyntax}
+    \mv{polytype} \STO \mv{context} \hTO \mv{monotype}
+                  \SOR \mv{monotype}
+    \\
+    \mv{monotype} \STO  \mv{tyvar}
+                        \REM{Type variable}
+                  \SOR  \mv{monotype}_1 \hto \mv{monotype}_2
+                        \REM{Function type}
+                  \SOR  \hlb\mv{monotype}\hrb
+                        \REM{List type}
+                  \SOR  \hlp\mv{monotype}_1\hlc\dots\hlc\mv{monotype}_n\hrp
+                        \quad (n=0\text{ or }n\ge2)
+                        \REM{Tuple type (incl.\ unit)}
+                  \SOR  \mv{tycon}\,\mv{monotype}_1\dots\mv{monotype}_n
+                        \quad (n\ge0)
+                        \REM{Constructed type}
+    \\
+    context       \STO \hlp\mv{class}_1\,\mv{tyvar}_1\hlc\dots\hlc\mv{class}_n\,\mv{tyvar}_n\hrp
+    \end{haskellsyntax}%
+  }
+
+  \caption{Abstract syntax of Haskell: types}
+
+  \end{figure}

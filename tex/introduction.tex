@@ -1,0 +1,42 @@
+\section{Introduction}
+
+Recentemente, il concetto di Monade è diventato un importante e pratico
+strumento per i linguaggi funzionali.
+La ragionde di questo dipende dal fatto che i \textit{Monads} propongono un
+framework uniforme per descrivere una enorme set di caratteristiche tipicamente
+impoerative all'interno di un sistema puro.\\
+Nella sezione \ref{a_simple_evaluator} vedremo una possibile implementazione per
+una funzione di valutazione di una semplice grammatica, esplicitando tutta la
+computazione necessaria.\\
+L'introduzione ai \textit{Monads} è definita nel capitolo \ref{monads}, dove
+definisco la struttura di un Monade e ne descrivo le proprietà.\\
+Successivamente, la sezione \ref{monadic_evaluator}, descrive lo stesso
+interprete in chiave monadica, esponendo i vantaggi dell'applicazione delle
+\textit{Monads} su questo semplice esempio.\\
+La sezione \ref{composing_monads} pone le basi e descrive la caratterizzazione
+generale del concetto di \textit{Composing Monads}, questa sezione non entra nel
+dettaglio dell'algebra astratta ad alto livello, ma ragione su una astrazione
+di un linguaggio funzionale puro. Questa è la sezione principale di questo
+report, definendo formalmente le tre classi di possibili tecniche per combinare
+\textit{Monads} in maniera arbitraria.\\
+Passiamo poi a definire nella sezione \ref{general_framework_for_composition}
+un sistema per generalizzare la composizione dei monadi.\\
+L'ultima sezione (capitolo \ref{composed_monad_interpreter}) infine implementa
+i meccanismi definiti nella sezione \ref{composing_monads} nello stesso esempio
+visto nei primi due capitoli.\newline
+
+Per questo report non assumo nessun linguaggio di programmazione, gli esempi e
+la sintassi utilizzata fanno riferimento a \textit{Gofer}
+\footnote{\textit{Gofer}, un piccolo, sperimentale e semplice linguaggio
+puramente funzionale}.\newline
+
+In appendice \ref{proofs} definisco le dimostrazioni che ritengo più importanti
+e istruttive. Alcune dimostrazioni semplici e/o limitate sono definite tra le
+righe, solitamente delimitate da un semplice box.
+Mentre in appendice \ref{state_transformer} mostro un esempio di come un
+\textit{composed monad} non riesce ad esprimere il concetto di
+\textit{State Transitions}, per questo esempio noteremo come un'implementazione
+ad-hoc sia diversa dall'equivalente rappresentazione mediante composizione.
+
+
+\newpage
