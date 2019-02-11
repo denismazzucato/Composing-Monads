@@ -53,6 +53,7 @@ a quale costruzione è destinato.
 Per evitare questa ambiguità, definiamo un costruttore $c$ per ogni
 \textit{composition constructions} con l'intenzione che $c\ f\ g\ x$ sia la
 composizione $f\ (g\ a)$, identificando quindi la costruzione utilizzata.
+\label{composer}
 \begin{align*}
   \classdef{\bm{class}\ Composer\ c\ \bm{where}}
   open &:: c\ f\ g\ x \to f\ (g\ x)\\
