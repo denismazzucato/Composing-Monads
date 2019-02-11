@@ -1,0 +1,79 @@
+Come richiesto in questa sezione inserirò degli $snippets$ di codice $Scala$
+per la composizione generalizzata di monadi.
+Non essendo pratico di $scala$ sono ricorso agli esempi definiti da Omura \cite{omura0}
+e Milewski \cite{milewski0}.
+
+\begin{lstlisting}[style=myScalastyle, caption=Functor and Monad Traits]
+  trait Functor[F[_]]{
+    def map[A,B](ma:F[A])(f:(A) => B):F[B]
+  }
+  trait Monad[M[_]] extends Functor[M]{
+    def unit[A](a:A):M[A]
+    // come il join operator
+    def flatten[A](mm:M[M[A]]):M[A]
+    // flatMap puo' essere utile negli esempi pratici
+    // derivata da map e join
+    def flatMap[A,B](ma:M[A])(f:(A)=>M[B]) = flatten(map(ma)(f))
+  }
+\end{lstlisting}
+
+Per l'esempio considererò una coppia di monadi composta con il costruttore $swap$,
+vedi sezione \ref{swap_construction}
+
+\begin{lstlisting}[style=myScalastyle, caption=Swap Constructor]
+  trait SComposable[M[_],N[_]]{
+    def M:Monad[M]
+    def N:Monad[N]
+    def swap[A](nm:N[M[A]]):M[N[A]]
+  }
+\end{lstlisting}
+
+Definiamo qualche istanza di $Monad$
+
+\begin{lstlisting}[style=myScalastyle, caption=Type class instances]
+implicit val OptionMonad = new Monad[Option]{
+  def map[A, B](ma: Option[A])(f: (A) => B) = ma.map(f)
+  def unit[A](a: A) = Option(a)
+  def flatten[A](mm: Option[Option[A]]) = mm.flatMap(identity)
+}
+implicit val ListMonad = new Monad[List]{
+  def map[A, B](ma: List[A])(f: (A) => B) = ma.map(f)
+  def unit[A](a: A) = List(a)
+  def flatten[A](mm: List[List[A]]) = mm.flatten
+  }
+\end{lstlisting}
+\pagebreak
+Quindi passiamo a definire istanze di $SComposable$ come $Monad$
+
+\begin{lstlisting}[style=myScalastyle, caption=SComposable is Monad]
+implicit def monadsCompose[M[_],N[_]](implicit m:Monad[M], n:Monad[N], s:Distributives[M,N])=
+  new Monad[({type MN[x] = M[N[x]]})#MN]{
+    def map[A,B](ma:M[N[A]])(f: (A) => B) = m.map(ma)(n.map(_)(f))
+    def unit[A](a: A) =  m.unit(n.unit(a))
+    def flatten[A](mnmn:M[N[M[N[A]]]])= m.map(m.flatten(m.map(mnmn)(s.swap(_))))(n.flatten(_))
+  }
+\end{lstlisting}
+
+Ora definiamo la composizione generalizzata mediante $swap$ per le due istanze
+definite
+\begin{lstlisting}[style=myScalastyle, caption=Composing List]
+  implicit def MonadListDistributives[M[_]](implicit monadM:Monad[M]) = new Distributives[M,List] {
+    def M = monadM
+    def N = implicitly[Monad[List]]
+    def swap[A](nm: List[M[A]]):M[List[A]] = nm match {
+      case List() => monadM.unit(List())
+      case x::xs => for { y <- x;
+                          ys <- swap(xs)} yield y::ys
+    }
+  }
+\end{lstlisting}
+\begin{lstlisting}[style=myScalastyle, caption=Composing Optional]
+  implicit def MonadOptionDistributives[M[_]](implicit monadM: Monad[M]) = new Distributives[M,Option]{
+    def M = monadM
+    def N = implicitly[Monad[Option]]
+    def swap[A](nm: Option[M[A]]) = nm match{
+      case Some(ma) => monadM.map(ma)(Option(_))
+      case None => monadM.unit(None)
+    }
+  }
+\end{lstlisting}

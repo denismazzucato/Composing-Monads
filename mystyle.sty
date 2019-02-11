@@ -15,6 +15,9 @@
 \usepackage{float} % block figure
 \usepackage{framed}
 \usepackage{bm}
+\usepackage{beramono}
+\usepackage{xcolor}
+\usepackage{url}
 
 % first page entries -----------------------------------------------------------
 \title{
@@ -73,29 +76,29 @@ Reasoning about Composing Monads
 \ExplSyntaxOff
 
 % Code listing -----------------------------------------------------------------
-\lstset{
-  frame=none,
-  stepnumber=1,
-  numbers=none,
-  belowcaptionskip=\bigskipamount,
-  captionpos=b,
-  escapeinside={*'}{'*},
-  language=haskell,
-  tabsize=2,
-  emphstyle={\bf},
-  commentstyle=\it,
-  stringstyle=\mdseries\rmfamily,
-  showspaces=false,
-  keywordstyle=\bfseries\rmfamily,
-  basicstyle=\small\sffamily,
-  showstringspaces=false,
-  morecomment=[l]\%,
-  mathescape=true,
-}
+% \lstset{
+%   frame=none,
+%   stepnumber=1,
+%   numbers=none,
+%   belowcaptionskip=\bigskipamount,
+%   captionpos=b,
+%   escapeinside={*'}{'*},
+%   language=haskell,
+%   tabsize=2,
+%   emphstyle={\bf},
+%   commentstyle=\it,
+%   stringstyle=\mdseries\rmfamily,
+%   showspaces=false,
+%   keywordstyle=\bfseries\rmfamily,
+%   basicstyle=\small\sffamily,
+%   showstringspaces=false,
+%   morecomment=[l]\%,
+%   mathescape=true,
+% }
 
-\newenvironment{CenteredBox}{%
-\begin{Sbox}}{% Save the content in a box
-\end{Sbox}\centerline{\parbox{\wd\@Sbox}{\TheSbox}}}% And output it centered
+% \newenvironment{CenteredBox}{%
+% \begin{Sbox}}{% Save the content in a box
+% \end{Sbox}\centerline{\parbox{\wd\@Sbox}{\TheSbox}}}% And output it centered
 
 % Centering code ---------------------------------------------------------------
 
@@ -136,7 +139,30 @@ Reasoning about Composing Monads
   \leavevmode\box_use:N \l_listings_boxed_box
  }
 \ExplSyntaxOff
+%-------------------------------------------------------------------------------
 
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstdefinestyle{myScalastyle}{
+  frame=tb,
+  language=scala,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+}
 %-------------------------------------------------------------------------------
 
 \newcommand\doubleplus{+\kern-1.3ex+\kern0.8ex}
@@ -145,3 +171,4 @@ Reasoning about Composing Monads
 \newcommand{\req}[1]{{\parallel#1\parallel}}
 \newcommand*{\genbf}[1]{\ifmmode\mathbf{#1}\else\textbf{#1}\fi}
 \newcommand{\classdef}[1]{\noalign{\centering${#1}$}}
+
