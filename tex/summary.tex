@@ -1,2 +1,85 @@
 \section{Summary}
 \label{summary}
+
+Ora invece cerchiamo di capire dato un $ADT$
+\footnote{Abstract Data Type, tipo di dato astratto}, come potremmo comporlo con
+altri monadi.
+Definiamo quindi una struttura generale per gli $ADT$, notiamo prima qualche
+osservazione per restringere la costruzione di questi tipi di dato astratti
+\begin{itemize}
+  \item Non faremo distinzioni tra coppie e sequenze in quanto un $ADT$ definito
+    mediante coppia e uno mediante sequenza sono equivalenti
+    \begin{align*}
+      \bm{data}\ A\ a = A\ (a,\ b_1,\ \dots\ ,\ b_n) \equiv \bm{data}\ B\ a = B\ a\ b_1\ \dots\ b_n
+    \end{align*}
+    Con i parametri $b_1,\ \dots\ ,b_n$ fissati, è facile vedere come in ogni situazione
+    in cui necessito di $A$ possa utilizzare $B$ data la funzione biettiva di conversione
+    \begin{align*}
+      \gamma &:: A \to B\\
+      \gamma\ (A\ (x,\ y_1,\ \dots\ ,\ y_n)) &= B\ x\ y_1\ \dots\ \ y_n\\
+      \gamma^{-1}\ (B\ x\ y_1\ \dots\ \ y_n) &= A\ (x,\ y_1,\ \dots\ ,\ y_n)
+    \end{align*}
+  \item Ogni $ADT$ sarà unario per semplicità. Nota come questa non sia una restrizione
+    ma solamente una semplificazione, in quanto, ogni construttore non unario
+    può essere $curryfied$ e diventarlo.
+    Considerando semplicemente un parametro alla volta.
+\end{itemize}
+La struttura che ho trovato più generale possibile per caratterizzare tutti i tipi
+di $ADT$ è la seguente
+\begin{align*}
+  \bm{data}\ A\ a = A_0\ a{_0}{^*}\ |\ \dots\ |\ A_n\ a{_n}{^*}
+\end{align*}
+Dove:
+\begin{itemize}
+  \item $A_i$ descrivono i vari costruttore utilizzati, inoltre $|\ A_i\ \forall i\ | >0$
+    non può esistere il caso in cui un tipo di dato astratto non abbia nessun costruttore
+  \item $a{_i}{^*}$ è una lista di parametri (anche vuota), $\forall i,\ k.\ a{_i}{^k}$ è $a$ oppure un tipo fissato
+\end{itemize}
+Notiamo come i principali $ADT$ incontrati fino ad ora rispettino questa caratterizzazione:
+\begin{alignat*}{2}
+  Maybe\ a &= Just\ a\ &&|\ Nothing\\
+  A\ a &= A_0\ a\ &&|\ A_1 \\\\
+  Error\ s\ a &= Raise\ s\ &&|\ Return\ a\\
+  B\ a &= A_0\ s\ &&|\ A_1\ a\\\\
+  (s \to)\ a &= Reader\ (s \to a)\\
+  A\ a &= A_0\ C\ a\\\\
+  ZipList\ a &= Z\ [\ a\ ]\\
+  A\ a &= A_0\ D\ a
+\end{alignat*}
+Con $B$, $C$ e $D$ definiti come:
+\begin{itemize}
+  \item $B \equiv (A\ a_0)$ con $a_0$ che diventa parametro fissato
+  \item $C \equiv (s \to)$ per descrivere le realzioni
+  \item $D \equiv \lambda x \to [\ x\ ]$ per rappresentare l'operatore di $binding$ per liste
+\end{itemize}
+
+Definiamo inoltre il \textbf{tipo di dato astratto base}, ovvero un $ADT$ che non può essere
+scomposto in altri $ADT$ di inferiore struttura.
+In altri termini, un $ADT$ base non è rappresentabile mediante la composizione di
+più $ADT$ in ogni sua parte.\newline
+
+  Dato quindi un $ADT$ \textbf{base} possiamo
+  \begin{itemize}
+    \item pre-comporlo \footnote{$A$ pre-composto a $m$ se intendo la composizione di $m\ .\ A$}
+     ad $m$, utilizzando il costruttore $prod$, se $m$ dispone di una funzione di aggregazione
+     oppure se in $A$ non ci sono multiple apparizioni di $a$ parametro
+    \item post-comporlo \footnote{$A$ post-composto a $m$ se intendo la composizione di $A\ .\ m$}
+     ad $m$, utilizzando il costruttore $dorp$, se $m$ dispone di una funzione di aggregazione
+     oppure se in $A$ non ci sono multiple apparizioni di $a$ parametro
+    \item pre-comporlo utilizzando il costruttore $swap$, richiedendo all'arbitrario
+      monade di possedere la proprietà commutativa
+  \end{itemize}
+
+Dare una dimostrazione formale di queste proprietà richiede l'esistenza di funzioni
+ausiliarie di commutazione che porterebbero alla costruzione di $prod$ e $dorp$, la cui
+esistenza porterebbe alla definizione di $join$.
+Non stiamo quindi concludendo che due monadi qualsiasi sono componibili tra di loro
+dato che in questa lista riassuntiva richiediamo sempre di essere a conoscenza della
+struttura di almeno uno dei due monadi.
+Difatti stiamo solo ristrutturando in maniera equivalente le conclusioni del capitolo
+\ref{general_framework_for_composition}.\\
+Inoltre non sempre la composizione di due monadi è la modalità preferibile di composizione,
+nella sezione \ref{state_transformer} vediamo un caso in cui la composizione
+è semanticamente diversa al monade che stiamo cercando.
+
+\vfill
