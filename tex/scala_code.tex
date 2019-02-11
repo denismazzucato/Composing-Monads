@@ -41,34 +41,35 @@ implicit val ListMonad = new Monad[List]{
   def map[A, B](ma: List[A])(f: (A) => B) = ma.map(f)
   def unit[A](a: A) = List(a)
   def flatten[A](mm: List[List[A]]) = mm.flatten
-  }
+}
 \end{lstlisting}
 \pagebreak
 Definiamo anche la sintassi per $map$ e $flatmap$ per le monadi, il corrispettivo
 del $Composer$ visto in sezione \ref{composer}.
-\begin{lstlisting}[style=myScalastyle, caption=Type class instances]
+\begin{lstlisting}[style=myScalastyle, caption=Composer]
 case class Mval[M[_]:Monad,A](v:M[A]){
   def map[B](f:(A)=>B) = implicitly[Monad[M]].map(v)(f)
-  def flatMap[B](f:(A)=>M[B])= implicitly[Monad[M]].flatMap(v)(f)
+  def flatMap[B](f:(A)=>M[B])
+    = implicitly[Monad[M]].flatMap(v)(f)
 }
 implicit def v2M[M[_]:Monad, A](v:M[A]) = Mval(v)
 def compose[M[_],N[_],A](mna:M[N[A]])
-    (implicit mn:Monad[({type MN[x] = M[N[x]]})#MN])
-    :Mval[({type MN[x] = M[N[x]]})#MN,A]
+  (implicit mn:Monad[({type MN[x] = M[N[x]]})#MN])
+  :Mval[({type MN[x] = M[N[x]]})#MN,A]
   = Mval[({type MN[x] = M[N[x]]})#MN,A](mna)
 \end{lstlisting}
 Quindi passiamo a definire istanze di $SComposable$ come $Monad$
 
 \begin{lstlisting}[style=myScalastyle, caption=SComposable is Monad]
 implicit def monadsCompose
-        [M[_],N[_]]
-        (implicit m:Monad[M], n:Monad[N], s:Distributives[M,N])
-        = new Monad[({type MN[x] = M[N[x]]})#MN]{
-  def map[A,B](ma:M[N[A]])(f: (A) => B) =
-    m.map(ma)(n.map(_)(f))
-  def unit[A](a: A) =  m.unit(n.unit(a))
-  def flatten[A](mnmn:M[N[M[N[A]]]])=
-    m.map(m.flatten(m.map(mnmn)(s.swap(_))))(n.flatten(_))
+  [M[_],N[_]]
+  (implicit m:Monad[M], n:Monad[N], s:Distributives[M,N])
+  = new Monad[({type MN[x] = M[N[x]]})#MN]{
+    def map[A,B](ma:M[N[A]])(f: (A) => B)
+      = m.map(ma)(n.map(_)(f))
+    def unit[A](a: A) =  m.unit(n.unit(a))
+    def flatten[A](mnmn:M[N[M[N[A]]]])
+      = m.map(m.flatten(m.map(mnmn)(s.swap(_))))(n.flatten(_))
 }
 \end{lstlisting}
 
@@ -76,9 +77,9 @@ Ora definiamo la composizione generalizzata mediante $swap$ per le due istanze
 definite
 \begin{lstlisting}[style=myScalastyle, caption=Composing List]
   implicit def MonadListDistributives
-                [M[_]]
-                (implicit monadM:Monad[M])
-                = new Distributives[M,List] {
+    [M[_]]
+    (implicit monadM:Monad[M])
+    = new Distributives[M,List] {
     def M = monadM
     def N = implicitly[Monad[List]]
     def swap[A](nm: List[M[A]]):M[List[A]] = nm match {
@@ -93,15 +94,15 @@ definite
 \pagebreak
 \begin{lstlisting}[style=myScalastyle, caption=Composing Optional]
   implicit def MonadOptionDistributives
-                [M[_]]
-                (implicit monadM: Monad[M])
-                = new Distributives[M,Option]{
-    def M = monadM
-    def N = implicitly[Monad[Option]]
-    def swap[A](nm: Option[M[A]]) = nm match{
-      case Some(ma) => monadM.map(ma)(Option(_))
-      case None => monadM.unit(None)
-    }
+    [M[_]]
+    (implicit monadM: Monad[M])
+    = new Distributives[M,Option]{
+      def M = monadM
+      def N = implicitly[Monad[Option]]
+      def swap[A](nm: Option[M[A]]) = nm match{
+        case Some(ma) => monadM.map(ma)(Option(_))
+        case None => monadM.unit(None)
+      }
   }
 \end{lstlisting}
 

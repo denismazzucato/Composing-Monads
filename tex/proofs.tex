@@ -1,8 +1,8 @@
 \label{proofs}
 
-\subsection{Exception is a Monad}
-\label{exception_is_a_monad}
-Dimostriamo che il tipo astratto $Exception$ \ref{exceptions} è un
+\subsection{Error is a Monad}
+\label{Error_is_a_monad}
+Dimostriamo che il tipo astratto $Error$ \ref{exceptions} è un
 \textit{Functor}, \textit{Premonad} e \textit{Monad}\newline
 
 \textbf{Dim:}\newline
@@ -12,13 +12,13 @@ Dimostriamo che il tipo astratto con le operazioni di \textit{map},
 \textit{Premonad} e \textit{Monad}, $M1\dots7$
 
 \begin{align*}
-  \textbf{data}\ Exception\ a &= Raise\ String\ |\ Return\ a \\\\
-  map &:: (a \to b) \to Exception\ a \to Exception\ b\\
+  \textbf{data}\ Error\ a &= Raise\ String\ |\ Return\ a \\\\
+  map &:: (a \to b) \to Error\ a \to Error\ b\\
   map\ f\ (Raise\ s) &= Raise\ s\\
   map\ f\ (Return\ x) &= Return\ (f\ x)\\\\
-  unit &:: a \to Exception\ a\\
+  unit &:: a \to Error\ a\\
   unit &= Return\\\\
-  join &:: Exception\ (Exception\ a) \to Exception\ a\\
+  join &:: Error\ (Error\ a) \to Error\ a\\
   join\ (Raise\ s) &= Raise\ s\\
   join\ (Return\ x) &= x
 \end{align*}
@@ -144,7 +144,7 @@ Per la dimostrazione procedo per casi sui costrutti $Raise$ e $Return$
 \end{framed}
 
 Osservazione $(*)$, utilizzando la definizione inversa di $join$ richiedo che il suo
-parametro $s$ sia di tipo $s::Exception$
+parametro $s$ sia di tipo $s::Error$
 
 % ------------------------------------------------------------------------------
 

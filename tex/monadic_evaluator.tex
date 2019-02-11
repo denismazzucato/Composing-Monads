@@ -16,28 +16,28 @@ Per rappresentare la gestione delle eccezioni definisco il \textit{Monad}
   \centering
   \footnotesize % adapt to your page size
   \begin{haskellsyntax}
-  \textbf{data}\ Exception\ a &= Raise\ String\ |\ Return\ a \\\\
+  \textbf{data}\ Error\ a &= Raise\ String\ |\ Return\ a \\\\
 
-  map &:: (a \to b) \to Exception\ a \to Exception\ b\\
+  map &:: (a \to b) \to Error\ a \to Error\ b\\
   map\ f\ (Raise\ s) &= Raise\ s\\
   map\ f\ (Return\ x) &= Return\ (f\ x)\\\\
 
-  unit &:: a \to Exception\ a\\
+  unit &:: a \to Error\ a\\
   unit &= Return\\\\
 
-  join &:: Exception\ (Exception\ a) \to Exception\ a\\
+  join &:: Error\ (Error\ a) \to Error\ a\\
   join\ (Raise\ s) &= Raise\ s\\
   join\ (Return\ x) &= x
   \end{haskellsyntax}%
 \end{figure}
-La dimostrazione la si può trovare in appendice \ref{exception_is_a_monad}.
+La dimostrazione la si può trovare in appendice \ref{Error_is_a_monad}.
 Definiamo quindi il corrispondente interprete per la grammatica
 \ref{abstract_syntax}
 \begin{figure}[H]
   \centering
   \footnotesize % adapt to your page size
   \begin{haskellsyntax}
-  eval &:: Expr \to Env \to Exception\ Value\\
+  eval &:: Expr \to Env \to Error\ Value\\
   eval \ (Const \ v) \ env &= unit\ v\\
   eval \ (Var \ x) \ env   &= lookup \ env \ x\\
   eval \ (e_0 + e_1) \ env &= bind\ (eval\ e_0\ env)\\
@@ -45,7 +45,7 @@ Definiamo quindi il corrispondente interprete per la grammatica
                            & \qquad \qquad \lambda\ v_1 \to unit (v_0 + v_1)
   \end{haskellsyntax}%
 \end{figure}
-Nota se \textit{Exception }è \textit{Monad} posso usare sia join che bind,
+Nota se \textit{Error }è \textit{Monad} posso usare sia join che bind,
 per questo esempio è comodo utilizzare il bind operator.
 Ora passiamo ad osservare i pregi di questo esempio, notiamo subito come il
 codice sia più coinciso e descriva meglio l'intenzione piuttosto che la
@@ -140,14 +140,14 @@ Anche $MonadCompositor$ è un \textit{Monad} e passati due monadi come parametri
 ne ritorna la composizione naturale.
 Con questo framework potremmo definire l'interprete sul tipo
 \begin{align*}
-  eval :: Expr \to Env \to MonadCompositor\ Exception\ (Writer\ [String])
+  eval :: Expr \to Env \to MonadCompositor\ Error\ (Writer\ [String])
 \end{align*}
 Con il vantaggio di dover modificare solamente poca sintassi dell'interprete
 monadico già definito.
 Inoltre se una nuova feature dovesse essere aggiunta lo sforzo per raggiungere
 il task sarebbe minimo utilizzando il tipo
 \begin{align*}
-  MonadCompositor\ Exception\ (MonadCompositor\ FeatureMonad\ (Writer\ [String]))
+  MonadCompositor\ Error\ (MonadCompositor\ FeatureMonad\ (Writer\ [String]))
   \end{align*}
 Data la sola definizione del $FeatureMonad$ che dovrà solamente occuparsi di
 implementare il proprio \textit{Monad} in un ambiente chiuso.\newline
