@@ -64,7 +64,8 @@ ridefinite ogni volta.
 \begin{align*}
   \classdef{\bm{instance}\ (Composer\ c\,\ Functor\ f,\ Functor\ g) \implies Functor\ (c\ f\ g)\  \bm{where}}
   map\ f &= close\ .\ mapC\ f\ .\ open\\
-  \classdef{\bm{instance}\ (Composer\ c\,\ Premonad m,\ Premonad n) \implies Premonad\ (c\ m\ n)\  \bm{where}}
+  \classdef{\bm{instance}\ (Composer\ c\,\ Premonad m,\ Premonad n)}
+  \classdef{\implies Premonad\ (c\ m\ n)\  \bm{where}}
   unit &= close\ .\ unitC
 \end{align*}
 Le prossime definizioni saranno utilizzate molteplici volte nelle sezioni
@@ -89,20 +90,156 @@ la computazione di un componente dentro il \textit{composite monad}.
 
 \subsection{Programming Prod Construction}
 \label{programming_prod_construction}
+Creaiamo un'istanza del $Composer$ sopra definito per il costruttore $prod$
+\begin{align*}
+  \classdef{\bm{data}\ PComp\ f\ g\ x\ =\ PC\ (f\ (g\ x))}
+  \classdef{\bm{instance}\ Composer\ PComp\ \bm{where} }
+  open\ (PC\ x)\ &= x\\
+  close &= PC
+\end{align*}
+La costruzione richiede lei stessa la funzione $prod$ come definita
+\begin{align*}
+  \classdef{\bm{class}\ (Monad\ m,\ Premonad\ n) \implies PComposable\ m\ n\ \bm{where}}
+  prod &:: n\ (m\ (n\ a)) \to m\ (n\ a)
+\end{align*}
+Notiamo come le richieste imposte specifichino per $n$ solamente l'appartenenza
+alla classe dei $Premonads$, mentre per $m$ si richiede di essere un $Monads$
+\begin{align*}
+  joinP &:: (Pcomposable\ m\ n) \implies m\ (n\ (m\ (n\ a))) \to \ (n\ a)\\
+  joinP &= join\ .\ map\ prod
+\end{align*}
+Finalmente possiamo definire che $PComp$ sia un $Monad$
+\begin{align*}
+  \classdef{\bm{instance}\ PComposable\ m\ n \implies Monad\ (PComp\ m\ n)\ \bm{where}}
+  join &= wrap\ joinP
+\end{align*}
 
 \subsection{Programming Dorp Construction}
 \label{programming_dorp_construction}
+Come per il caso precedente, procediamo in maniera simile.
+Creaiamo un'istanza del $Composer$ sopra definito per il costruttore $dorp$
+\begin{align*}
+  \classdef{\bm{data}\ DComp\ f\ g\ x\ =\ DC\ (f\ (g\ x))}
+  \classdef{\bm{instance}\ Composer\ DComp\ \bm{where} }
+  open\ (DC\ x)\ &= x\\
+  close &= DC
+\end{align*}
+La costruzione richiede lei stessa la funzione $dorp$ come definita
+\begin{align*}
+  \classdef{\bm{class}\ (Premonad\ m,\ Monad\ n) \implies DComposable\ m\ n\ \bm{where}}
+  dorp &:: m\ (n\ (m\ a)) \to m\ (n\ a)
+\end{align*}
+Notiamo come le richieste imposte specifichino per $m$ solamente l'appartenenza
+alla classe dei $Premonads$, mentre per $n$ si richiede di essere un $Monads$
+\begin{align*}
+  joinD &:: (DComposable\ m\ n) \implies m\ (n\ (m\ (n\ a))) \to \ (n\ a)\\
+  joinD &= join\ .\ map\ dorp
+\end{align*}
+Finalmente possiamo definire che $DComp$ sia un $Monad$
+\begin{align*}
+  \classdef{\bm{instance}\ DComposable\ m\ n \implies Monad\ (DComp\ m\ n)\ \bm{where}}
+  join &= wrap\ joinD
+\end{align*}
 
 \subsection{Programming Swap Construction}
 \label{programming_swap_construction}
+Anche questo costruttore molto simile ai casi precedenti.
+Creaiamo un'istanza del $Composer$ sopra definito per il costruttore $swap$
+\begin{align*}
+  \classdef{\bm{data}\ SComp\ f\ g\ x\ =\ SC\ (f\ (g\ x))}
+  \classdef{\bm{instance}\ Composer\ SComp\ \bm{where} }
+  open\ (SC\ x)\ &= x\\
+  close &= SC
+\end{align*}
+La costruzione richiede lei stessa la funzione $swap$ come definita
+\begin{align*}
+  \classdef{\bm{class}\ (Premonad\ m,\ Monad\ n) \implies SComposable\ m\ n\ \bm{where}}
+  swap &:: n\ (m\ a) \to m\ (n\ a)
+\end{align*}
+Notiamo come le richieste imposte specifichino sia per $m$ che per $n$ l'appartenenza
+alla classe dei $Monads$, diversamente dai casi precedenti
+\begin{align*}
+  joinS &:: (SComposable\ m\ n) \implies m\ (n\ (m\ (n\ a))) \to \ (n\ a)\\
+  joinS &= map\ join\ .\ join\ .\ map\ swap
+\end{align*}
+Finalmente possiamo definire che $SComp$ sia un $Monad$
+\begin{align*}
+  \classdef{\bm{instance}\ SComposable\ m\ n \implies Monad\ (SComp\ m\ n)\ \bm{where}}
+  join &= wrap\ joinS
+\end{align*}
+Inoltre possiamo notare come un $SComposable$ sia egli stesso un $PComposable$ e
+$DComposable$, questa definizione mostra come un costruttore $prod$ e $dorp$
+possa sempre essere derivato da una definizione di $swap$
+\begin{align*}
+  \classdef{\bm{instance}\ SComposable\ m\ n \implies PComposable\ m\ n\ \bm{where}}
+  prod &= map\ join\ .\ swap\\
+  \classdef{\bm{instance}\ SComposable\ m\ n \implies DComposable\ m\ n\ \bm{where}}
+  dorp &= map\ join\ .\ swap\\
+\end{align*}
 
 \subsection{Some Examples}
 \label{some_examples}
 
 \subsubsection*{Reader}
+Il Monade $Reader$ è un costruttore del tipo $(r\ \to)$ che mappa per ogni tipo
+$a$ alla funzione del tipo $r \to a$, la sua strutture  è definita come segue
+
+\begin{align*}
+  \classdef{\bm{instance}\ Functor\ (r \to)\ \bm{where}}
+  map\ f\ g\ &= f\ .\ g\\
+  \classdef{\bm{instance}\ Premonad\ (r \to)\ \bm{where}}
+  unit\ x\ y\ &= x\\
+  \classdef{\bm{instance}\ Monad\ (r \to)\ \bm{where}}
+  join\ f\ x\ &= f\ x\ x\\
+\end{align*}
+Questo caso combineremo un qualsiasi Monade $n$ con il monade $Reader$ usando il
+costruttore $dorp$
+\begin{align*}
+  \classdef{\bm{instance}\ DComposable\ (r \to)\ n\ \bm{where}}
+  dorp\ m\ r\ &=\ [\ g\ r\ |\ g \leftarrow m\ r\ ]
+\end{align*}
 
 \subsubsection*{Writer}
+Il \textit{Writer Monad} invece è un Monade che descrive programmi che producono
+sia valori che output in maniera parallela.
+Inoltre questo Monade assume che il parametro fisso $s$ sia un $Monoid$, vedi
+sezione \ref{monoid}.
+\begin{align*}
+  \classdef{\bm{instance}\ Functor\ (Writer\ s)\ \bm{where}}
+  map\ f\ (Result\ s\ a)\ &= Result\ s\ (f\ a)\\
+  \classdef{\bm{instance}\ Monoid\ s \implies Premonad\ (Writer\ s)\ \bm{where}}
+  unit\ &= Result\ zero\\
+  \classdef{\bm{instance}\ Monoid\ s \implies Monad\ (Writer\ s)\ \bm{where}}
+  join\ (Result\ s\ (Result\ t\ x)) &= Result\ (add\ s\ t)\ x\\
+\end{align*}
+Questo Monade è un esempio di come si utilizza il costrutto $swap$ per combinare
+un qualsiasi Monade
+\begin{align*}
+  \classdef{\bm{instance}\ SComposable\ (Writer\ s)\ n\ \bm{where}}
+  swap\ (Result\ s\ m) &=\ [\ Result\ s\ a\ |\ a \leftarrow m\ ]
+\end{align*}
 
-\subsubsection*{Error}
+
+\subsubsection*{Maybe}
+Il \textit{Maybe Monad} invece è un Monade che descrive programmi che producono
+non sempre valori corretti.
+Molto simile al monade $Error$.
+\begin{align*}
+  \classdef{\bm{instance}\ Functor\ Maybe\ \bm{where}}
+  map\ f\ (Just\ x)\ &= Just\ (f\ x))\\
+  map\ f\ (Nothing)\ &= Nothing\\
+  \classdef{\bm{instance}\ Premonad\ Maybe\ \bm{where}}
+  unit\ &= Just\\
+  \classdef{\bm{instance}\ Monad\ Maybe\ \bm{where}}
+  join\ (Just\ m) &= m\\
+  join\ Nothing &= Nothing\
+\end{align*}
+Questo Monade è un esempio di come si utilizza il costrutto $prod$ per combinare
+un qualsiasi Monade
+\begin{align*}
+  \classdef{\bm{instance}\ PComposable\ m\ Maybe\ \bm{where}}
+  prod\ (Just\ m) &=\ m\\
+  prod\ Nothing &=\ unit\ Nothing\\
+\end{align*}
 
 \pagebreak

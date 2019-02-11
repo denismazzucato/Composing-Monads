@@ -173,12 +173,12 @@ Precisamente possiamo costruire solo termini generati dalla seguenti regole
 \begin{align*}
   \begin{split}
     \frac
-      {a \overset{f}{\longrightarrow} a}
+      {a \overset{f}{\longrightarrow} b}
       {M\ a \overset{map_M\ f}{\longrightarrow} M\ b}
   \end{split}
   \begin{split}
     \frac
-      {a \overset{f}{\longrightarrow} a}
+      {a \overset{f}{\longrightarrow} b}
       {N\ a \overset{map_N\ f}{\longrightarrow} N\ b}
   \end{split}
 \end{align*}
@@ -220,15 +220,6 @@ Notiamo quindi che se le regole base definissero solo funzioni del tipo
   \begin{cases}
    \req{X}\ <\ \req{Y} &if\ (X)_1 \neq (Y)_1\\
    \req{X}\ \leq\ \req{Y} &if\ (X)_1 = (Y)_1
-  \end{cases}
-  && (*)
-\end{align*}
-
-\begin{align*}
-  \vdash X \to Y \implies
-  \begin{cases}
-   |rd\ X|\ <\ |rd\ Y| &if\ (X)_1 \neq (Y)_1\\
-   |rd\ X|\ \leq\ |rd\ Y| &if\ (X)_1 = (Y)_1
   \end{cases}
   && (*)
 \end{align*}

@@ -1,1 +1,17 @@
 \label{state_transformer}
+
+In questa sezione mostro il motivo per cui non sempre la composizione ha
+l'effetto sperato.
+Il $Monad$ per lo $State\ Transformer$ difatti rappresenta un esempio pratico
+in cui, dato un $Monad M$, la composizione generalizzata non è ciò che ci
+aspettiamo
+\begin{align*}
+  \dots
+\end{align*}
+Una spiegazione a questo fatto è che la composizione di monadi generata dal
+nostro framework non riesce ad esprimere la relazione che intercorre tra i
+componenti del monade composto.
+Questa spiegazione, istanziata al nostro caso, in particolare non esprime
+l'equivalenza tra il parametro in input al $Reader\ Monad$ con l'output prodotto
+nel $Writer\ Monad$.\newline
+
