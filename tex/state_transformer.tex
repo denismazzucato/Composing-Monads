@@ -4,14 +4,54 @@ In questa sezione mostro il motivo per cui non sempre la composizione ha
 l'effetto sperato.
 Il $Monad$ per lo $State\ Transformer$ difatti rappresenta un esempio pratico
 in cui, dato un $Monad M$, la composizione generalizzata non è ciò che ci
-aspettiamo
+aspettiamo.\newline
+
+L'$ADT$ per lo $state\ transitions$
 \begin{align*}
-  \dots
+  \bm{data}\ State\ s\ a = ST(s \to (a,\ s))
 \end{align*}
+Difatti il monade per le transizioni di stato è definito
+\begin{align*}
+  \classdef{\bm{instance}\ Functor\ (State\ s)\ \bm{where}}
+  map\ f\ (ST\ x)\ &= ST(\lambda s \to \bm{let}\ (s',\ x) = st\ s\ \bm{in}\ (s',\ f\ x))\\
+  \classdef{\bm{instance}\ Premonad\ (State\ s)\ \bm{where}}
+  unit\ x &= ST(\lambda s \to (s,\ x))\\
+  \classdef{\bm{instance}\ Monad\ (State\ s)\ \bm{where}}
+  join\ (ST\ m) &= ST(\lambda s \to \bm{let}\ (s',\ ST\ m') = m\ s\ \bm{in}\ m'\ s')\\
+\end{align*}
+Possiamo notare come lo $State$ possa essere definito in termini di
+\textit{Monad Composition} tra $Reader$ e $Writer$.
+Difatti possiamo comporre lo $State$ in questo modo, $State\ s\ a = (s \to)\ .\ (Writer\ s)\ a$.
+Oppure mediante il framework della sezione \ref{general_framework_for_composition},
+$\bm{data}\ State\ s\ a = DComp\ (s \to)\ (Writer\ s)\ a$.\newline
+
+Questo nuovo $Monad$ non è equivalente allo $State$ definito sopra, difatti nel caso
+$unit$ il monade composto ritorna, dato un qualsiasi $s$ lo $zero$ del $Monoid$
+$s$, inoltre richiede appunto che $s$ sia $Monoid$.\newline
+
+Potremmo quindi creare un caso specifico per combinare un qualsiasi $Monad$ con
+lo \textit{State Transitions}, prima di tutto definiamo il suo tipo, sarà generico
+in $m$
+\begin{align*}
+  \bm{data}\ StateM\ m\ s\ a = STM(s \to m\ (a,\ s))
+\end{align*}
+Poi istanziamolo ad essere un monade
+\begin{align*}
+  \classdef{\bm{instance}\ Monad\ m \implies Functor\ (StateM\ m\ s)\ \bm{where}}
+  map\ f\ (STM\ xs)\ &= STM(\lambda s \to [(s',\ f\ x)\ |\ (s',\ x) \leftarrow xs\ s])\\
+  \classdef{\bm{instance}\ Monad\ m \implies Premonad\ (StateM\ m\ s)\ \bm{where}}
+  unit\ xs &= STM(\lambda s \to [(s,\ x)])\\
+  \classdef{\bm{instance}\ Monad\ m \implies Monad\ (StateM\ m\ s)\ \bm{where}}
+  join\ (STM\ xss) &= STM(\lambda s \to [(s'',\ x)\ |\ (STM\ xs,\ s') \leftarrow xss\ s, \\
+                   &\qquad\qquad\qquad\qquad\qquad\qquad(s'',\ x) \leftarrow xs\ s'])\\
+\end{align*}
+Ora riusciamo a comporre un qualsiasi $Monads$ con il sistema di \textit{State Transitions}
+, notiamo però che abbiamo creato un sistema di composizione generalizzata ad hoc.
+Quindi non sfruttiamo il framework precedentemente creato.\newline
+
 Una spiegazione a questo fatto è che la composizione di monadi generata dal
 nostro framework non riesce ad esprimere la relazione che intercorre tra i
 componenti del monade composto.
 Questa spiegazione, istanziata al nostro caso, in particolare non esprime
 l'equivalenza tra il parametro in input al $Reader\ Monad$ con l'output prodotto
 nel $Writer\ Monad$.\newline
-

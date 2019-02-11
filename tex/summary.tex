@@ -58,7 +58,8 @@ scomposto in altri $ADT$ di inferiore struttura.
 In altri termini, un $ADT$ base non è rappresentabile mediante la composizione di
 più $ADT$ in ogni sua parte.\newline
 
-  Dato quindi un $ADT$ \textbf{base} possiamo
+\setlength{\fboxsep}{1em}
+\fbox{\parbox{.9\linewidth}{Dato quindi un $ADT$ \textbf{base} possiamo
   \begin{itemize}
     \item pre-comporlo \footnote{$A$ pre-composto a $m$ se intendo la composizione di $m\ .\ A$}
      ad $m$, utilizzando il costruttore $prod$, se $m$ dispone di una funzione di aggregazione
@@ -69,10 +70,16 @@ più $ADT$ in ogni sua parte.\newline
     \item pre-comporlo utilizzando il costruttore $swap$, richiedendo all'arbitrario
       monade di possedere la proprietà commutativa
   \end{itemize}
+}}\\\\
 
 Dare una dimostrazione formale di queste proprietà richiede l'esistenza di funzioni
 ausiliarie di commutazione che porterebbero alla costruzione di $prod$ e $dorp$, la cui
 esistenza porterebbe alla definizione di $join$.
+In particolare richiediamo la proprietà commutativa $(1)$ e quella "aggregativa" $(2)$
+\begin{align}
+  [\ exp\ |\ x \leftarrow v,\ y \leftarrow u\ ] &= [\ exp\ |\ y \leftarrow u,\ x \leftarrow v\ ]\\
+  \exists f.\ f &:: a_0 \to \dots \to a_n \to b
+\end{align}
 Non stiamo quindi concludendo che due monadi qualsiasi sono componibili tra di loro
 dato che in questa lista riassuntiva richiediamo sempre di essere a conoscenza della
 struttura di almeno uno dei due monadi.

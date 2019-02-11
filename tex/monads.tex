@@ -56,3 +56,24 @@ se \textit{M} è un tipo costruttore unario diremo che
     \textit{(M5)}, \textit{(M6)} e \textit{(M7)}.
 
 \end{enumerate}
+
+\subsection*{Examples}
+
+Mostriamo come due linguaggi di programmazione (non sperimentali) definiscano i concetti
+di $Monads$.
+
+\paragraph*{Haskell}
+Per Haskell un Monade è definito in modo molto simile a $Gofer$, ovvero è un
+oggetto con le proprietà
+\begin{itemize}
+  \item $return$, corrispondente a $unit$
+  \item $bind$, corrispondente a $join$, vedi l'equazione $bind\ x\ f = join\ (map\ f\ x)$
+\end{itemize}
+
+\paragraph*{Scala}
+Per scala invece un Monade è definito con le seguenti proprietà
+\begin{itemize}
+  \item $unit$
+  \item $flatMap$, corrispondente a $join$, vedi $flatMap$ è l'operatore $bind$
+\end{itemize}
+\pagebreak
