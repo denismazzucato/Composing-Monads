@@ -63,7 +63,7 @@ Quindi passiamo a definire istanze di $SComposable$ come $Monad$
 \begin{lstlisting}[style=myScalastyle, caption=SComposable is Monad]
 implicit def monadsCompose
   [M[_],N[_]]
-  (implicit m:Monad[M], n:Monad[N], s:Distributives[M,N])
+  (implicit m:Monad[M], n:Monad[N], s:SComposable[M,N])
   = new Monad[({type MN[x] = M[N[x]]})#MN]{
     def map[A,B](ma:M[N[A]])(f: (A) => B)
       = m.map(ma)(n.map(_)(f))
@@ -76,10 +76,10 @@ implicit def monadsCompose
 Ora definiamo la composizione generalizzata mediante $swap$ per le due istanze
 definite
 \begin{lstlisting}[style=myScalastyle, caption=Composing List]
-  implicit def MonadListDistributives
+  implicit def MonadListSComposable
     [M[_]]
     (implicit monadM:Monad[M])
-    = new Distributives[M,List] {
+    = new SComposable[M,List] {
     def M = monadM
     def N = implicitly[Monad[List]]
     def swap[A](nm: List[M[A]]):M[List[A]] = nm match {
@@ -93,10 +93,10 @@ definite
 \end{lstlisting}
 \pagebreak
 \begin{lstlisting}[style=myScalastyle, caption=Composing Optional]
-  implicit def MonadOptionDistributives
+  implicit def MonadOptionSComposable
     [M[_]]
     (implicit monadM: Monad[M])
-    = new Distributives[M,Option]{
+    = new SComposable[M,Option]{
       def M = monadM
       def N = implicitly[Monad[Option]]
       def swap[A](nm: Option[M[A]]) = nm match{
