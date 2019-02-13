@@ -7,8 +7,8 @@ un framework per la composizione di monadi.
 Dal precedente capitolo \ref{composing_monads}, definiremo una serie di classi e
 funzioni per poter tipare correttamente le operazioni necessarie e definire
 finalmente il tipo di dato astratto per la composizione generalizzata.
-Le classi saranno implementate in sintassi Gofer per permettere di essere
-codificate in un qualsiasi linguaggio funzionale.\newline
+Le classi saranno implementate in sintassi Gofer per permettere un migliore
+ragionamento e in Scala per avere esmpio concreti.\newline
 
 Abbiamo già visto come non sia possibile definire la composizione che riceva
 due $Monads$ arbitrari.
@@ -30,6 +30,21 @@ Vediamo velocemente come si rappresentano i tipi costruttori base.
 \end{align*}
 Con $\implies$ si intende la relazione di $subtyping$, ovvero la classe a sinistra
 di $\implies$ è sotto classe di quella definita a sinistra.
+
+\begin{lstlisting}[style=myScalastyle, caption=Functor Premonad and Monad Traits]
+  trait Functor[F[_]]{
+    def map[A,B](ma:F[A])(f:(A) => B):F[B]
+  }
+  trait Premonad[M[_]] extends Functor[M]{
+    def unit[A](a:A):M[A]
+  }
+  trait Monad[M[_]] extends Functor[M]{
+    // come il join operator
+    def flatten[A](mm:M[M[A]]):M[A]
+    // come il bind operator, Scala defisce cosi' il Monad
+    def flatMap[A,B](ma:M[A])(f:(A)=>M[B]) = flatten(map(ma)(f))
+  }
+\end{lstlisting}
 
 \subsection{Composition Construction}
 \label{composition_construction}
@@ -69,6 +84,15 @@ ridefinite ogni volta.
   \classdef{\implies Premonad\ (c\ m\ n)\  \bm{where}}
   unit &= close\ .\ unitC
 \end{align*}
+\begin{lstlisting}[style=myScalastyle, caption=Natural map and unit operator]
+  implicit def premonadsCompose[M[_],N[_]]
+    (implicit m:Monad[M], n:Monad[N])
+    = new Premonad[({type MN[x] = M[N[x]]})#MN]{
+      def map[A,B](ma:M[N[A]])(f: (A) => B)
+        = m.map(ma)(n.map(_)(f))
+      def unit[A](a: A) =  m.unit(n.unit(a))
+  }
+  \end{lstlisting}
 Le prossime definizioni saranno utilizzate molteplici volte nelle sezioni
 seguenti.
 Il loro scopo è di convertire funzioni per il $join$ di composizioni nella forma
@@ -103,10 +127,17 @@ La costruzione richiede lei stessa la funzione $prod$ come definita
   \classdef{\bm{class}\ (Monad\ m,\ Premonad\ n) \implies PComposable\ m\ n\ \bm{where}}
   prod &:: n\ (m\ (n\ a)) \to m\ (n\ a)
 \end{align*}
+\begin{lstlisting}[style=myScalastyle, caption=Prod Constructor]
+  trait PComposable[M[_],N[_]]{
+    def M:Monad[M]
+    def N:Premonad[N]
+    def prod[A](nm:N[M[N[A]]]):M[N[A]]
+  }
+\end{lstlisting}
 Notiamo come le richieste imposte specifichino per $n$ solamente l'appartenenza
 alla classe dei $Premonads$, mentre per $m$ si richiede di essere un $Monads$
 \begin{align*}
-  joinP &:: (Pcomposable\ m\ n) \implies m\ (n\ (m\ (n\ a))) \to \ (n\ a)\\
+  joinP &:: (Pcomposable\ m\ n) \implies m\ (n\ (m\ (n\ a))) \to m\ (n\ a)\\
   joinP &= join\ .\ map\ prod
 \end{align*}
 Finalmente possiamo definire che $PComp$ sia un $Monad$
@@ -114,6 +145,14 @@ Finalmente possiamo definire che $PComp$ sia un $Monad$
   \classdef{\bm{instance}\ PComposable\ m\ n \implies Monad\ (PComp\ m\ n)\ \bm{where}}
   join &= wrap\ joinP
 \end{align*}
+\begin{lstlisting}[style=myScalastyle, caption=PComposable is Monad]
+  implicit def monadPCompose[M[_],N[_]]
+    (implicit m:Monad[M], n:Monad[N], p:PComposable[M,N])
+    = new Monad[({type MN[x] = M[N[x]]})#MN]{
+      def flatten[A](mnmn:M[N[M[N[A]]]])
+        = m.flatten(m.map(mnmn)(p.prod(_)))
+  }
+  \end{lstlisting}
 
 \subsection{Programming Dorp Construction}
 \label{programming_dorp_construction}
@@ -130,6 +169,13 @@ La costruzione richiede lei stessa la funzione $dorp$ come definita
   \classdef{\bm{class}\ (Premonad\ m,\ Monad\ n) \implies DComposable\ m\ n\ \bm{where}}
   dorp &:: m\ (n\ (m\ a)) \to m\ (n\ a)
 \end{align*}
+\begin{lstlisting}[style=myScalastyle, caption=Dorp Constructor]
+  trait DComposable[M[_],N[_]]{
+    def M:Premonad[M]
+    def N:Monad[N]
+    def dorp[A](nm:M[N[M[A]]]):M[N[A]]
+  }
+\end{lstlisting}
 Notiamo come le richieste imposte specifichino per $m$ solamente l'appartenenza
 alla classe dei $Premonads$, mentre per $n$ si richiede di essere un $Monads$
 \begin{align*}
@@ -141,7 +187,15 @@ Finalmente possiamo definire che $DComp$ sia un $Monad$
   \classdef{\bm{instance}\ DComposable\ m\ n \implies Monad\ (DComp\ m\ n)\ \bm{where}}
   join &= wrap\ joinD
 \end{align*}
-
+\begin{lstlisting}[style=myScalastyle, caption=DComposable is Monad]
+  implicit def monadDCompose[M[_],N[_]]
+    (implicit m:Monad[M], n:Monad[N], d:DComposable[M,N])
+    = new Monad[({type MN[x] = M[N[x]]})#MN]{
+      def flatten[A](mnmn:M[N[M[N[A]]]])
+        = m.flatten(m.map(mnmn)(d.dorp(_)))
+  }
+  \end{lstlisting}
+\pagebreak
 \subsection{Programming Swap Construction}
 \label{programming_swap_construction}
 Anche questo costruttore molto simile ai casi precedenti.
@@ -157,6 +211,13 @@ La costruzione richiede lei stessa la funzione $swap$ come definita
   \classdef{\bm{class}\ (Premonad\ m,\ Monad\ n) \implies SComposable\ m\ n\ \bm{where}}
   swap &:: n\ (m\ a) \to m\ (n\ a)
 \end{align*}
+\begin{lstlisting}[style=myScalastyle, caption=Swap Constructor]
+  trait SComposable[M[_],N[_]]{
+    def M:Monad[M]
+    def N:Monad[N]
+    def swap[A](nm:N[M[A]]):M[N[A]]
+  }
+\end{lstlisting}
 Notiamo come le richieste imposte specifichino sia per $m$ che per $n$ l'appartenenza
 alla classe dei $Monads$, diversamente dai casi precedenti
 \begin{align*}
@@ -168,6 +229,14 @@ Finalmente possiamo definire che $SComp$ sia un $Monad$
   \classdef{\bm{instance}\ SComposable\ m\ n \implies Monad\ (SComp\ m\ n)\ \bm{where}}
   join &= wrap\ joinS
 \end{align*}
+\begin{lstlisting}[style=myScalastyle, caption=SComposable is Monad]
+  implicit def monadSCompose[M[_],N[_]]
+    (implicit m:Monad[M], n:Monad[N], s:SComposable[M,N])
+    = new Monad[({type MN[x] = M[N[x]]})#MN]{
+      def flatten[A](mnmn:M[N[M[N[A]]]])
+        = m.map(m.flatten(m.map(mnmn)(s.swap(_))))(n.flatten(_))
+  }
+  \end{lstlisting}
 Inoltre possiamo notare come un $SComposable$ sia egli stesso un $PComposable$ e
 $DComposable$, questa definizione mostra come un costruttore $prod$ e $dorp$
 possa sempre essere derivato da una definizione di $swap$
@@ -178,6 +247,7 @@ possa sempre essere derivato da una definizione di $swap$
   dorp &= map\ join\ .\ swap\\
 \end{align*}
 
+\pagebreak
 \subsection{Some Examples}
 \label{some_examples}
 
@@ -220,7 +290,7 @@ un qualsiasi Monade
   swap\ (Result\ s\ m) &=\ [\ Result\ s\ a\ |\ a \leftarrow m\ ]
 \end{align*}
 
-
+\pagebreak
 \subsubsection*{Maybe}
 Il \textit{Maybe Monad} invece è un Monade che descrive programmi che producono
 non sempre valori corretti.
@@ -242,5 +312,18 @@ un qualsiasi Monade
   prod\ (Just\ m) &=\ m\\
   prod\ Nothing &=\ [\ Nothing\ ]\\
 \end{align*}
+
+\begin{lstlisting}[style=myScalastyle, caption=Composing Maybe]
+  implicit def MonadMaybeSComposable[M[_]]
+    (implicit monadM: Monad[M])
+    = new SComposable[M,Maybe]{
+      def M = implicitly[Monad[Maybe]]
+      def N = monadM
+      def prod[A](nm: Maybe[M[A]]) = nm match{
+        case Just(ma) => monadM.map(ma)(Maybe(_))
+        case Nothing => monadM.unit(Nothing)
+      }
+  }
+\end{lstlisting}
 
 \pagebreak

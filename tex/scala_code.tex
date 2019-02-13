@@ -3,11 +3,14 @@ Come richiesto in questa sezione inserirò degli $snippets$ di codice $Scala$
 per la composizione generalizzata di monadi.
 Non essendo pratico di $scala$ sono ricorso agli esempi definiti da Omura \cite{omura0}
 e Milewski \cite{milewski0}.
+Questo esempio ricrea il framework generalizzato per la composizione simile a quello
+visto nella sezione \ref{general_framework_for_composition}.
 
 \begin{lstlisting}[style=myScalastyle, caption=Functor and Monad Traits]
   trait Functor[F[_]]{
     def map[A,B](ma:F[A])(f:(A) => B):F[B]
   }
+  // per l'esempio unisco la definizione di Monad e Premonad
   trait Monad[M[_]] extends Functor[M]{
     def unit[A](a:A):M[A]
     // come il join operator
@@ -44,8 +47,8 @@ implicit val ListMonad = new Monad[List]{
 }
 \end{lstlisting}
 \pagebreak
-Definiamo anche la sintassi per $map$ e $flatmap$ per le monadi, il corrispettivo
-del $Composer$ visto in sezione \ref{composer}.
+Definiamo anche la sintassi per $map$ e $flatmap$ per le monadi scala, essenzialmente
+serve per poterle utilizzare dentro al ciclo $for$.
 \begin{lstlisting}[style=myScalastyle, caption=Composer]
 case class Mval[M[_]:Monad,A](v:M[A]){
   def map[B](f:(A)=>B) = implicitly[Monad[M]].map(v)(f)
@@ -61,8 +64,7 @@ def compose[M[_],N[_],A](mna:M[N[A]])
 Quindi passiamo a definire istanze di $SComposable$ come $Monad$
 
 \begin{lstlisting}[style=myScalastyle, caption=SComposable is Monad]
-implicit def monadsCompose
-  [M[_],N[_]]
+implicit def monadSCompose[M[_],N[_]]
   (implicit m:Monad[M], n:Monad[N], s:SComposable[M,N])
   = new Monad[({type MN[x] = M[N[x]]})#MN]{
     def map[A,B](ma:M[N[A]])(f: (A) => B)
@@ -76,8 +78,7 @@ implicit def monadsCompose
 Ora definiamo la composizione generalizzata mediante $swap$ per le due istanze
 definite
 \begin{lstlisting}[style=myScalastyle, caption=Composing List]
-  implicit def MonadListSComposable
-    [M[_]]
+  implicit def MonadListSComposable[M[_]]
     (implicit monadM:Monad[M])
     = new SComposable[M,List] {
     def M = monadM
@@ -93,8 +94,7 @@ definite
 \end{lstlisting}
 \pagebreak
 \begin{lstlisting}[style=myScalastyle, caption=Composing Optional]
-  implicit def MonadOptionSComposable
-    [M[_]]
+  implicit def MonadOptionSComposable[M[_]]
     (implicit monadM: Monad[M])
     = new SComposable[M,Option]{
       def M = monadM
