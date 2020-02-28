@@ -68,7 +68,7 @@ They slightly differ from the lawful described in the standard library, but as s
 
 - **category/natural_join** is the proof that a function with the right sign (MNMNX → MNX) cannot 
 be found only with the given monads M and N.
-**inv** is the invariant that every function has to satisfy, and **type** is the system that abstract over the real Lean typing system to be able to use pattern matching over the monad type.
+**inv** is the invariant that every function has to satisfy, and **type** is the system that abstract over the real Lean typing system to permit us to use pattern matching over the monad type.
 
 - **composed/basic** defines the structure for the composition of functor and premonad only.
 **composed/prod**, **composed/dorp** and **composed/swap** define the structure for the monad composition instead.
