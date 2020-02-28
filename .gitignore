@@ -242,3 +242,8 @@ TSWLatexianTemp*
 *.spl
 
 scala
+
+# lean
+*.olean
+/_target
+/leanpkg.path
