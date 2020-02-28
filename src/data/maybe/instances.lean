@@ -1,10 +1,7 @@
 import .basic
-import ...category.lawful -- TODO: is there a better way to do it?
+import ...category.lawful
 
 namespace maybe
-#check category.functor.map
-
--- TODO: add a tactic to resolve this automatically
 
 protected lemma map_id : ∀(α : Type),
   (category.functor.map id : maybe α → maybe α) = id :=
@@ -12,59 +9,69 @@ begin
   intro α,
   apply funext,
   intro x,
-  cases x ; simp,
+  cases x ; simp[category.functor.map],
 end
 
 protected lemma map_comp : ∀(α β γ : Type) (f : γ → β) (g : α → γ),
-  map f ∘ map g = (map (f ∘ g) : maybe α → maybe β) :=
+  category.functor.map f ∘ category.functor.map g
+  = (category.functor.map (f ∘ g) : maybe α → maybe β) :=
 begin
   intros α β γ f g,
   apply funext,
   intro x,
-  cases x ; simp,
+  cases x ; simp[category.functor.map],
 end
 
 protected lemma unit_map : ∀(α β : Type) (f : α → β),
-  unit ∘ f = map f ∘ (unit : α → maybe α) :=
+  category.premonad.unit ∘ f
+  = category.functor.map f ∘ (category.premonad.unit : α → maybe α) :=
 begin
   intros α β f,
   apply funext,
-  simp,
+  simp[category.functor.map, category.premonad.unit],
 end
 
 protected lemma join_seq_map : ∀(α β : Type) (f : α → β),
-  join ∘ map (map f) = map f ∘ (join : maybe (maybe α) → maybe α) :=
+  category.monad.join ∘ category.functor.map (category.functor.map f)
+  = category.functor.map f ∘ (category.monad.join 
+    : maybe (maybe α) → maybe α) :=
 begin
   intros α β f,
   apply funext,
   intro x,
-  cases x ; simp,
+  cases x ;
+  simp[category.functor.map, category.premonad.unit, category.monad.join],
 end
 
 protected lemma join_unit : ∀(α : Type),
-  join ∘ unit = (id : maybe α → maybe α) :=
+  category.monad.join ∘ category.premonad.unit = (id : maybe α → maybe α) :=
 begin
   intro α,
   apply funext,
-  simp,
+  simp[category.functor.map, category.premonad.unit, category.monad.join],
 end
 
 protected lemma join_map_unit : ∀(α : Type), 
-  join ∘ map unit = (id : maybe α → maybe α) :=
+  category.monad.join ∘ category.functor.map category.premonad.unit
+  = (id : maybe α → maybe α) :=
 begin
   intro α,
   apply funext,
   intro x,
-  cases x ; simp,
+  cases x ; 
+  simp[category.functor.map, category.premonad.unit, category.monad.join],
 end
 
 protected lemma join_map_join : ∀(α : Type),
-  join ∘ map join = (join ∘ join : maybe (maybe (maybe α)) → maybe α) :=
+  category.monad.join ∘ category.functor.map category.monad.join
+  = (category.monad.join ∘ category.monad.join
+    : maybe (maybe (maybe α)) → maybe α) :=
 begin
   intro α,
   apply funext,
   intro x,
-  cases x ; simp,
+  cases x ; 
+  simp[category.functor.map, category.premonad.unit, category.monad.join],
 end
 
 instance : category.is_lawful_functor maybe :=
