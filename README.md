@@ -16,7 +16,8 @@ so I presented my own version.
 ## Formalization - February 2020
 
 One year later, I decided to formalize in
-[Lean](https://leanprover.github.io/) this work.
+[Lean](https://leanprover.github.io/) this work, under the supervision of Dr. [Jasmin Blanchette](https://research.vu.nl/en/persons/jasmin-christian-blanchette).
+
 The work can easily be found in the *src* directory.
 
 ### dir structure
